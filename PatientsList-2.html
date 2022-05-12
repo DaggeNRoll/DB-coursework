@@ -35,51 +35,48 @@
             <hr>
             <ul class="nav nav-pills flex-column mb-auto">
                 <li class="nav-item">
-                    <a href="#" class="nav-link active" aria-current="page">
-                        <svg class="bi me-2" width="16" height="16"><use xlink:href="#home"></use></svg>
+                    <a href="PatientsList-2.html" class="nav-link active" aria-current="page">
                         Список Пациентов
                     </a>
                 </li>
-                <li>
-                    <a href="#" class="nav-link text-white">
-                        <svg class="bi me-2" width="16" height="16"><use xlink:href="#speedometer2"></use></svg>
-                        Dashboard
+                <li class="nav-item">
+                    <a href="PatientQuestioning.html" class="nav-link text-white">
+                        Визит 0
                     </a>
                 </li>
-                <li>
+                <li class="nav-item">
                     <a href="#" class="nav-link text-white">
-                        <svg class="bi me-2" width="16" height="16"><use xlink:href="#table"></use></svg>
-                        Orders
+                        Визит 1
                     </a>
                 </li>
-                <li>
+                <li class="nav-item">
                     <a href="#" class="nav-link text-white">
-                        <svg class="bi me-2" width="16" height="16"><use xlink:href="#grid"></use></svg>
-                        Products
+                        Визит 2
                     </a>
                 </li>
-                <li>
+                <li class="nav-item">
                     <a href="#" class="nav-link text-white">
-                        <svg class="bi me-2" width="16" height="16"><use xlink:href="#people-circle"></use></svg>
-                        Customers
+                        Визит 3
                     </a>
                 </li>
             </ul>
             <hr>
-            <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-                <span>Навигация по странице</span>
-                </a>
-            </h6>
-            <hr>
+
             <ul class="nav nav-pills flex-column mb-auto">
                 <li class="nav-item ">
-                    <a class="nav-link" href="#scrollspyPatientsList">Пациенты</a>
+
                 </li>
             </ul>
+                <nav class="nav nav-tabs flex-column mb-auto" id="nav-tab" role="tablist">
+                    <a class="nav-link active" id="nav-PList-tab" data-bs-toggle="tab" href="#nav-home" role="tab" aria-controls="nav-home" aria-selected="true">Список</a>
+                    <a class="nav-link" id="nav-profile-tab" data-bs-toggle="tab" href="#nav-profile" role="tab" aria-controls="nav-profile" aria-selected="false">Profile</a>
+                </nav>
             </div>
         </nav>
 
-        <main data-bs-spy="scroll" data-bs-target="#sidebarMenu" data-bs-offset="0" class="scrollspy-example col-md-9 ms-sm-auto col-lg-10 px-md-4">
+        <main  class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+     <div class="tab-content" id="nav-tabContent">
+        <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-PList-tab">
          <div class="shadow card bg-dark">
             <div class="table-responsive">
                 <div class="table-wrapper">
@@ -123,10 +120,10 @@
                                         <label for="checkbox1"></label>
                                     </span>
                             </td>
-                            <td>First name</td>
-                            <td>Last name</td>
-                            <td>Phone #</td>
-                            <td>Location</td>
+                            <td>1488</td>
+                            <td>Жмышенко Валерий Альбертович</td>
+                            <td>+714881337228</td>
+                            <td>Самара</td>
                             <td>
                                 <a href="#EditPatientModal" class="edit" data-bs-toggle="modal"><i class="bi bi-pencil-fill" data-toggle="tooltip" title="Edit"></i></a>
                                 <a href="#deletePatientModal" class="delete" data-bs-toggle="modal"><i class="bi bi-trash3-fill" data-toggle="tooltip" title="Delete"></i></a>
@@ -138,6 +135,11 @@
                 </div>
             </div>
          </div>
+     </div>
+         <div class="tab-pane fade show" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab">
+             <img  src = "https://sun1-83.userapi.com/s/v1/if2/K8bz2Q1Py5fUUPJb8EqzQu_LiSRNU0MueUTKY6P6OGEEWb9y-mRfJjWkegsZwTzP3xc21DI-lQ1lR8yY7rq9nsEQ.jpg?size=520x520&quality=95&type=album" alt="My Happy SVG"/>
+         </div>
+     </div>
 
 
 
