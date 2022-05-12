@@ -1,0 +1,125 @@
+html,
+body {
+  height: 100%;
+  background: #0b172a;
+
+}
+
+.container {
+
+  display: flex;
+  align-items: center;
+  padding-top: 40px;
+  padding-bottom: 40px;
+  margin: auto;
+
+
+}
+.nav-tabs .nav-link.active {
+  color: #ffffff;
+  background-color: #bc4123;
+  border-color: #bc4123;
+}
+
+.nav-tabs .nav-link {
+  margin-bottom: -1px;
+  background: 0 0;
+  border: 1px solid transparent;
+  border-top-left-radius: 0.25rem;
+  border-top-right-radius: 0.25rem;
+}
+.row
+{
+  //background: #ffffff;
+  width: 100%;
+  height: 100%;
+  padding: 40px 50px;
+  display: flex;
+  align-items: center;
+  position: relative;
+  list-style: none;
+  flex-direction: row;
+  align-content: center;
+  justify-content: center;
+
+}
+.nav-tabs {
+ border-bottom: none;
+}
+.form-control {
+  display: block;
+  width: 100%;
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #212529;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-top-left-radius: 0rem;
+  border-top-right-radius: 0rem;
+  background-color: #fff;
+  background-clip: padding-box;
+  border: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+}
+.input-group{
+  border-bottom-left-radius: 0rem!important;
+  border-bottom-right-radius: 0rem!important;
+}
+
+
+.form-signin {
+  //background: #200122;
+  width: 100%;
+  max-width: 330px;
+  padding: 15px;
+  margin: auto;
+}
+.checkbox{
+  color: #fff;
+}
+.nav-link{
+  color: #fff;
+  background-color: #bc4123;
+  border-color: #bc4123;
+}
+.btn-primary {
+  color: #fff;
+  background-color: #bc4123;
+  border-color: #bc4123;
+
+}
+.btn-primary:hover,
+
+.btn-primary:focus{
+  background-color: #e76343;
+  border-color: #a3a7b6;
+}
+
+.btn-primary:visited{
+  background-color: #bc4123;
+  border-color: #a3a7b6;
+}
+.form-signin .checkbox {
+  font-weight: 400;
+}
+
+.form-signin .form-floating:focus-within {
+  z-index: 2;
+}
+
+.form-signin input[type="UserEmail"] {
+  margin-bottom: -1px;
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.form-signin input[type="UserPassword"] {
+  margin-bottom: 10px;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}

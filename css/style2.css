@@ -1,0 +1,64 @@
+body {
+    color: #fff;!important;
+}
+.sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+
+}
+.card{
+    background: #495164;
+}
+.mt-auto {
+    margin-top: auto!important;
+}
+.table-responsive {
+    margin: 30px 0;
+}
+.table-wrapper {
+    min-width: 1000px;
+    padding: 20px 25px;
+    border-radius: 3px;
+    box-shadow: 0 1px 1px rgba(0,0,0,.05);
+}
+.table{
+    color: #fff;!important;
+    --bs-table-striped-color: #fff;
+    --bs-table-hover-color: #bc4123;
+    --bs-table-active-color: #bc4123;
+}
+.table-title {
+    padding-bottom: 15px;
+    background: #495164;
+    color: #fff;
+    padding: 16px 30px;
+    margin: -20px -25px 10px;
+    border-radius: 3px 3px 0 0;
+}
+.table-title h2 {
+    margin: 5px 0 0;
+    font-size: 36px;
+}
+.table-title .btn-group {
+    float: right;
+}
+.table-title .btn {
+    color: #fff;
+    float: right;
+    font-size: 16px;
+    border: none;
+    min-width: 50px;
+    border-radius: 2px;
+    border: none;
+    outline: none !important;
+    margin-left: 10px;
+}
+.modal{
+    background-color: rgba(17, 17, 17, 0.25);
+}
+.modal-content{
+    background-color: #0b172a;
+}
