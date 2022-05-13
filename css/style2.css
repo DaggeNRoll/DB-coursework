@@ -9,8 +9,10 @@ body {
     z-index: 100;
 
 }
+
 .card{
-    background: #495164;
+    color: white;!important;
+    background-color: white;
 }
 .mt-auto {
     margin-top: auto!important;
