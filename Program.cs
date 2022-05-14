@@ -48,22 +48,25 @@ app.Run(async (context) =>
         string? id = path.Value?.Split("/")[3];
         await DeletePerson(id,response,request);
     }
-    /*else if (path == "/images/logo.png")
+    else switch (pathValues?.Length)
     {
-        await response.SendFileAsync("images/logo.png");
-    }*/
-    else if (pathValues?.Length==3 && path.Value?.Split("/")[1] == "images")
-    {
-        await SendImage(response, path.Value?.Split("/")[2]);
-    }
-    else if (pathValues?.Length == 3 && path.Value?.Split("/")[1] == "css")
-    {
-        await SendCss(response, path.Value?.Split("/")[2]);
-    }
-    else
-    {
-        response.ContentType="text/html; charset=utf-8";
-        await response.SendFileAsync("PatientsList-2.html");
+       
+        case 3 when path.Value?.Split("/")[1] == "images":
+            await SendImage(response, path.Value?.Split("/")[2]);
+            break;
+        case 3 when path.Value?.Split("/")[1] == "css":
+            await SendCss(response, path.Value?.Split("/")[2]);
+            break;
+        case 3 when path.Value?.Split("/")[1]=="html":
+            await SendHtml(response, path.Value?.Split("/")[2]);
+            break;
+        case 3 when path.Value?.Split("/")[1]=="js":
+            await SendJs(response, path.Value?.Split("/")[2]);
+            break;
+        default:
+            response.ContentType="text/html; charset=utf-8";
+            await response.SendFileAsync("html/PatientsList-2.html");
+            break;
     }
 });
 
@@ -77,6 +80,17 @@ async Task SendCss(HttpResponse response, string? cssFilePath)
 async Task SendImage(HttpResponse response, string? imageFilePath)
 {
     await response.SendFileAsync("images/" + imageFilePath);
+}
+
+async Task SendHtml(HttpResponse response, string? htmlFilePath)
+{
+    response.ContentType = "text/html; charset=utf-8";
+    await response.SendFileAsync("html/" + htmlFilePath);
+}
+
+async Task SendJs(HttpResponse response, string? jsFilePath)
+{
+    await response.SendFileAsync("js/" + jsFilePath);
 }
 
 async Task GetAllPeople(HttpResponse response)
