@@ -63,6 +63,9 @@ app.Run(async (context) =>
         case 3 when path.Value?.Split("/")[1]=="js":
             await SendJs(response, path.Value?.Split("/")[2]);
             break;
+        case 3 when path.Value?.Split("/")[1]=="data":
+            await SendData(response, path.Value?.Split("/")[2]);
+            break;
         default:
             response.ContentType="text/html; charset=utf-8";
             await response.SendFileAsync("html/PatientsList-2.html");
@@ -72,6 +75,10 @@ app.Run(async (context) =>
 
 app.Run();
 
+async Task SendData(HttpResponse response, string? dataFilePath)
+{
+    await response.SendFileAsync("data/" + dataFilePath);
+}
 async Task SendCss(HttpResponse response, string? cssFilePath)
 {
     await response.SendFileAsync("css/" + cssFilePath);
