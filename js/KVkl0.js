@@ -26,7 +26,7 @@ var json1 = {
 
         {
             "type": "boolean",
-            "name": "AgeBetween40-65",
+            "name": "AgeBetween40_65",
             "title": "Возраст 40 – 65 лет:",
             "labelTrue": "Да",
             "labelFalse": "Нет",
