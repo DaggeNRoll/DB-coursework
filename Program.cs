@@ -1,3 +1,4 @@
+using System.Data;
 using System.Text.RegularExpressions;
 using Dapper;
 using Npgsql;
@@ -24,6 +25,10 @@ app.Run(async (context) =>
     var pathValues = path.Value?.Split("/"); 
 
     //await WriteToDB("User ID=postgres;Password=Vhhvze05042002;Host=localhost;Port=5432;Database=Kursach;", response, request);
+    
+    using var connection = new NpgsqlConnection(builder.Configuration.GetConnectionString("KursachDb"));
+
+    //await GetCriteriaForInclusion(response, connection, 3, 0);
     
 
     if(path=="/api/users" && request.Method == "GET")
@@ -98,6 +103,64 @@ async Task SendHtml(HttpResponse response, string? htmlFilePath)
 async Task SendJs(HttpResponse response, string? jsFilePath)
 {
     await response.SendFileAsync("js/" + jsFilePath);
+}
+
+async Task GetAllPatients(HttpResponse response, NpgsqlConnection connection)
+{
+    var patients = connection.Query<User>("SELECT * FROM \"user\" WHERE \"Group\" LIKE 'patient'");
+    await response.WriteAsJsonAsync(patients);
+}
+
+async Task GetPatient(HttpResponse response, NpgsqlConnection connection, int id)
+{
+    
+    var query = "SELECT * FROM \"user\" WHERE \"Id\" = @Id";
+
+    var param = new DynamicParameters();
+    param.Add("@Id", id);
+    
+    var patient = connection.Query<User>(query,param);
+    await response.WriteAsJsonAsync(patient);
+}
+
+async Task GetKDH(HttpResponse response, NpgsqlConnection connection, int id)
+{
+    var query = "SELECT * FROM \"kdh\" WHERE \"kdh\".\"VisitId\" = (SELECT \"Id\" FROM \"visit\" WHERE \"visit\".\"UserId\" = @Id) ";
+
+    var param = new DynamicParameters();
+    param.Add("@Id",id);
+    var kdh = connection.Query<KDH>(query, param);
+    await response.WriteAsJsonAsync(kdh);
+}
+
+async Task GetCriteriaForException(HttpResponse response, NpgsqlConnection connection, int id, int visitPriority)
+{
+    var query = "SELECT * FROM \"criteriaForException\" WHERE \"criteriaForException\".\"VisitId\" = (SELECT \"Id\"" +
+                " FROM \"visit\" WHERE \"visit\".\"UserId\" = @Id AND \"visit\".\"Priority\"" +
+                "= @VisitPriority)";
+
+    var param = new DynamicParameters();
+    param.Add("@Id",id);
+    param.Add("@VisitPriority", visitPriority);
+
+    var criteriaForException = connection.Query<CriteriaForException>(query, param);
+
+    await response.WriteAsJsonAsync(criteriaForException);
+}
+
+async Task GetCriteriaForInclusion(HttpResponse response, NpgsqlConnection connection, int id, int visitPriority)
+{
+    var query = "SELECT * FROM \"criteriaForInclusion\" WHERE \"criteriaForInclusion\".\"VisitId\" = (SELECT \"Id\"" +
+                " FROM \"visit\" WHERE \"visit\".\"UserId\" = @Id AND \"visit\".\"Priority\"" +
+                "= @VisitPriority)";
+
+    var param = new DynamicParameters();
+    param.Add("@Id",id);
+    param.Add("@VisitPriority", visitPriority);
+
+    var criteriaForInclusion = connection.Query<CriteriaForInclusion>(query, param);
+
+    await response.WriteAsJsonAsync(criteriaForInclusion);
 }
 
 async Task GetAllPeople(HttpResponse response)
@@ -270,4 +333,15 @@ public class CriteriaForException
     public bool? RASBlockers { get; set; }
     public int VisitId { get; set; }
     
+}
+
+public class CriteriaForInclusion
+{
+    public int Id { get; set; }
+    public bool AgeBetween40_65 { get; set; }
+    public bool LowAndModerateRiskOfCardiovascularComplications { get; set; }
+    public bool ParticipationAgreement { get; set; }
+    public bool Hypertension { get; set; }
+    public bool SRBOrDOrA { get; set; }
+    public int VisitId { get; set; }
 }
