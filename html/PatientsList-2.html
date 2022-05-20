@@ -84,22 +84,22 @@
              <table id="example" class="table table-striped" style="width:100%">
                  <thead>
                  <tr>
-                     <th>Name</th>
-                     <th>Position</th>
-                     <th>Office</th>
-                     <th>Extn.</th>
-                     <th>Start date</th>
-                     <th>Salary</th>
+                     <th>Номер пациента</th>
+                     <th>ФИО</th>
+                     <th>Номер телефона</th>
+                     <th>Возраст</th>
+                     <th>Номер АК</th>
+                     <th>Дата добавления</th>
                  </tr>
                  </thead>
                  <tfoot>
                  <tr>
-                     <th>Name</th>
-                     <th>Position</th>
-                     <th>Office</th>
-                     <th>Extn.</th>
-                     <th>Start date</th>
-                     <th>Salary</th>
+                     <th>Номер пациента</th>
+                     <th>ФИО</th>
+                     <th>Номер телефона</th>
+                     <th>Возраст</th>
+                     <th>Номер АК</th>
+                     <th>Дата добавления</th>
                  </tr>
                  </tfoot>
              </table>
@@ -215,6 +215,9 @@
 <script>
     $(document).ready(function () {
         $('#example').DataTable({
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.12.0/i18n/ru.json'
+            },
             ajax: '../data/objects.txt',
             columns: [
                 { data: 'name' },
