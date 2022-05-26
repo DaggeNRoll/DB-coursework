@@ -265,6 +265,16 @@
 
     });
 </script>-->
+
+<script>
+    async function getUsers() {
+        // отправляет запрос и получаем ответ
+        const response = await fetch("/api/users", {
+            method: "GET",
+            headers: { "Accept": "application/json" }
+        });
+    }
+</script>
 <script>
     $(document).ready(function() {
 
@@ -297,14 +307,18 @@
         ];
 
 
-            var url_ws_mock_get = 'https://luca-vercelli.github.io/DataTable-AltEditor/example/03_ajax_objects/mock_svc_load.json';
-            var url_ws_mock_ok = 'https://luca-vercelli.github.io/DataTable-AltEditor/example/03_ajax_objects/mock_svc_ok.json';
+            //var url_ws_mock_get = 'https://luca-vercelli.github.io/DataTable-AltEditor/example/03_ajax_objects/mock_svc_load.json';
+           // var url_ws_mock_ok = 'https://luca-vercelli.github.io/DataTable-AltEditor/example/03_ajax_objects/mock_svc_ok.json';
 
        var myTable = $('#patients').DataTable({
             "sPaginationType": "full_numbers",
 
             ajax: {
-                url : '../js/tsconfig.json',
+                url : '/api/patients',
+                type: 'GET',
+                data: rowdata,
+                success: success,
+                error: error,
                 // our data is an array of objects, in the root node instead of /data node, so we need 'dataSrc' parameter
                 dataSrc : ''
             },

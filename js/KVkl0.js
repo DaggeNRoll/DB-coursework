@@ -61,6 +61,8 @@ survey2
         document
             .querySelector('#KVkl0res')
             .textContent = "Result JSON:\n" + JSON.stringify(sender.data, null, 3);
+        var mySurvey = sender;
+        var surveyData = sender.data;
     });
 
 
