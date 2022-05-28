@@ -1,4 +1,5 @@
 using System.Data;
+using System.Linq.Expressions;
 using System.Text.RegularExpressions;
 using Dapper;
 using Npgsql;
@@ -13,8 +14,24 @@ List<Person> users = new List<Person>
 
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
+using var connection = new NpgsqlConnection(builder.Configuration.GetConnectionString("KursachDb"));//могут быть проблемы с лямбдами
 
-app.Run(async (context) =>
+app.Map("/api", appBuilder =>
+{
+    appBuilder.Map("/patients", Patients);
+    appBuilder.Map("/kdh", Kdh);
+    appBuilder.Map("/criteriaforinclusion", CritForInc);
+    appBuilder.Map("/criteriaforexceprion", CritForExc);
+    /*appBuilder.Map("/html", Html);
+    appBuilder.Map("/images", Images);
+    appBuilder.Map("/css", Css);
+    appBuilder.Map("/js", Js);
+    appBuilder.Map("/data", Data);*/
+});
+
+
+
+/*app.Run(async (context) =>
 {
     var response = context.Response;
     var request = context.Request;
@@ -26,10 +43,10 @@ app.Run(async (context) =>
 
     //await WriteToDB("User ID=postgres;Password=Vhhvze05042002;Host=localhost;Port=5432;Database=Kursach;", response, request);
     
-    using var connection = new NpgsqlConnection(builder.Configuration.GetConnectionString("KursachDb"));
+    //using var connection = new NpgsqlConnection(builder.Configuration.GetConnectionString("KursachDb"));
 
     //await GetCriteriaForInclusion(response, connection, 3, 0);
-
+    
 
     if(path=="/api/users" && request.Method == "GET")
     {
@@ -80,9 +97,227 @@ app.Run(async (context) =>
             await response.SendFileAsync("html/PatientsList-2.html");
             break;
     }
+});*/
+
+app.Run(async (context) =>
+{
+    var response = context.Response;
+    var request = context.Request;
+    var path = request.Path;
+
+    switch (path.Value?.Split("/").Length)
+    {
+       
+        case 3 when path.Value?.Split("/")[1] == "images":
+            await SendImage(response, path.Value?.Split("/")[2]);
+            break;
+        case 3 when path.Value?.Split("/")[1] == "css":
+            await SendCss(response, path.Value?.Split("/")[2]);
+            break;
+        case 3 when path.Value?.Split("/")[1]=="html":
+            await SendHtml(response, path.Value?.Split("/")[2]);
+            break;
+        case 3 when path.Value?.Split("/")[1]=="js":
+            await SendJs(response, path.Value?.Split("/")[2]);
+            break;
+        case 3 when path.Value?.Split("/")[1]=="data":
+            await SendData(response, path.Value?.Split("/")[2]);
+            break;
+        default:
+            response.ContentType="text/html; charset=utf-8";
+            await response.SendFileAsync("html/PatientsList-2.html");
+            break;
+    }
 });
 
 app.Run();
+
+void CritForExc(IApplicationBuilder appBuilder)
+{
+    appBuilder.Run(async(context) =>
+    {
+        var response = context.Response;
+        var request = context.Request;
+        var path = request.Path;
+
+        switch (request.Method)
+        {
+            case "GET":
+                await GetCriteriaForException(response, connection, Convert.ToInt32(path.Value?.Split("/")[3]), Convert.ToInt32(path.Value?.Split("/")[4])); //обработка неверного ввода айди
+                break;
+                
+            case "PUT":
+                    
+                break;
+                
+            case "DELETE":
+                    
+                break;
+                
+            case "POST":
+                break;
+        
+        }
+    });
+}
+
+void Html(IApplicationBuilder appBuilder)
+{
+    appBuilder.Run(async (context) =>
+    {
+        var response = context.Response;
+        var request = context.Request;
+        var path = request.Path;
+
+        await SendHtml(response, path.Value?.Split("/")[2]);
+    });
+}
+
+void Images(IApplicationBuilder appBuilder)
+{
+    appBuilder.Run(async (context) =>
+    {
+        var response = context.Response;
+        var request = context.Request;
+        var path = request.Path;
+
+        await SendImage(response, path.Value?.Split("/")[2]);
+    });
+}
+
+void Css(IApplicationBuilder appBuilder)
+{
+    appBuilder.Run(async (context) =>
+    {
+        var response = context.Response;
+        var request = context.Request;
+        var path = request.Path;
+
+        await SendCss(response, path.Value?.Split("/")[2]);
+    });
+}
+
+void Js(IApplicationBuilder appBuilder)
+{
+    appBuilder.Run(async (context) =>
+    {
+        var response = context.Response;
+        var request = context.Request;
+        var path = request.Path;
+
+        await SendJs(response, path.Value?.Split("/")[2]);
+    });
+}
+
+void Data(IApplicationBuilder appBuilder)
+{
+    appBuilder.Run(async (context) =>
+    {
+        var response = context.Response;
+        var request = context.Request;
+        var path = request.Path;
+
+        await SendData(response, path.Value?.Split("/")[2]);
+    });
+}
+
+void CritForInc(IApplicationBuilder appBuilder)
+{
+    appBuilder.Run(async(context) =>
+    {
+        var response = context.Response;
+        var request = context.Request;
+        var path = request.Path;
+
+        switch (request.Method)
+        {
+            case "GET":
+                await GetCriteriaForInclusion(response, connection, Convert.ToInt32(path.Value?.Split("/")[3]), Convert.ToInt32(path.Value?.Split("/")[4])); //обработка неверного ввода айди
+                break;
+                
+            case "PUT":
+                    
+                break;
+                
+            case "DELETE":
+                    
+                break;
+                
+            case "POST":
+                break;
+        
+        }
+    });
+}
+
+void Patients(IApplicationBuilder appBuilder)
+{
+    appBuilder.Run(async (context) =>
+    {
+        var response = context.Response;
+        var request = context.Request;
+        var path = request.Path;
+
+        if (path.Value?.Split("/").Length == 4)
+        {
+            switch (request.Method)
+            {
+                case "GET":
+                    await GetPatient(response, connection, Convert.ToInt32(path.Value?.Split("/")[3]));
+                    break;
+                
+                case "PUT":
+                    await CreatePatient(response, request, connection);
+                    break;
+                
+                case "DELETE":
+                    
+                    break;
+                
+                case "POST":
+                    break;
+            }
+        }
+        else
+        {
+            switch (request.Method)
+            {
+                case "GET":
+                    await GetAllPatients(response, connection);
+                    break;
+            }
+        }
+    });
+}
+
+void Kdh(IApplicationBuilder appBuilder)
+{
+    appBuilder.Run(async (context) =>
+    {
+        var response = context.Response;
+        var request = context.Request;
+        var path = request.Path;
+
+        switch (request.Method)
+        {
+            case "GET":
+                await GetKDH(response, connection, Convert.ToInt32(path.Value?.Split("/")[3])); //обработка неверного ввода айди
+                break;
+                
+            case "PUT":
+                    
+                break;
+                
+            case "DELETE":
+                    
+                break;
+                
+            case "POST":
+                break;
+        
+        }
+    });
+}
 
 async Task SendData(HttpResponse response, string? dataFilePath)
 {
@@ -125,6 +360,39 @@ async Task GetPatient(HttpResponse response, NpgsqlConnection connection, int id
     
     var patient = connection.Query<User>(query,param);
     await response.WriteAsJsonAsync(patient);
+}
+
+async Task CreatePatient(HttpResponse response, HttpRequest request, NpgsqlConnection connection)
+{
+    try
+    {
+        var patient = await request.ReadFromJsonAsync<User>();
+        if (patient != null)
+        {
+            var query = "INSERT INTO \"user\" (\"Name\", \"PhoneNumber\", \"Email\", \"Group\"," +
+                        " \"AC\", \"Age\") VALUES (@Name, @PhoneNumber, @Email, @Group, @Ac, @Age);";
+
+            var param = new DynamicParameters();
+            param.Add("@Name", patient.Name);
+            param.Add("@PhoneNumber", patient.PhoneNumber);
+            param.Add("@Email", patient.Email);
+            param.Add("@Group", patient.Group);
+            param.Add("@Ac", patient.AC);
+            param.Add("@Age", patient.Age);
+
+            connection.Query(query, param);
+            await response.WriteAsJsonAsync(patient);
+        }
+        else
+        {
+            throw new Exception("Некорректные данные!");
+        }
+    }
+    catch (Exception)
+    {
+        response.StatusCode = 400;
+        await response.WriteAsJsonAsync(new { message = "Некорректные данные!" });
+    }
 }
 
 async Task GetKDH(HttpResponse response, NpgsqlConnection connection, int id)
