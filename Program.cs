@@ -29,7 +29,7 @@ app.Run(async (context) =>
     using var connection = new NpgsqlConnection(builder.Configuration.GetConnectionString("KursachDb"));
 
     //await GetCriteriaForInclusion(response, connection, 3, 0);
-    
+
 
     if(path=="/api/users" && request.Method == "GET")
     {
@@ -47,6 +47,10 @@ app.Run(async (context) =>
     else if(path=="/api/users" && request.Method == "Put")
     {
         await UpdatePerson(response,request);
+    }
+    else if (path == "/api/patients" && request.Method == "GET")
+    {
+        await GetAllPatients(response, connection);
     }
     else if (Regex.IsMatch(path, expressionForGuid) && request.Method == "DELETE")
     {
