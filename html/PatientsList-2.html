@@ -283,7 +283,7 @@
             {
                 data: "id",
                 title: "Номер",
-                type: "readonly"
+                //type: "readonly"
             },
             {
                 data: "name",
@@ -300,6 +300,10 @@
             {
                 data: "ac",
                 title: "Номер АК"
+            },
+            {
+                data:"email",
+                title:"E-mail"
             },
             {
                 data: "group",
@@ -355,9 +359,10 @@
             ],
             onAddRow: function(datatable, rowdata, success, error) {
                 $.ajax({
-                    url: '/api/patients/{id}',
+                    url: '/api/patients',
                     type: 'PUT',
-                    data: rowdata,
+                    data: JSON.stringify(rowdata),
+                    contentType: 'application/json;charset=utf-8',
                     success: success,
                     error: error
                 });
@@ -373,9 +378,9 @@
             },
             onEditRow: function(datatable, rowdata, success, error) {
                 $.ajax({
-                    url: '/api/patients/{id}',
+                    url: '/api/patients',
                     type: 'POST',
-                    data: rowdata,
+                    data: JSON.stringify(rowdata),
                     success: success,
                     error: error
                 });
