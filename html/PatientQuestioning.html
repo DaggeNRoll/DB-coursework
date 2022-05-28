@@ -129,24 +129,33 @@
                 title: "Номер",
             },
             {
-                data: "Name",
+                data: "name",
                 title: "ФИО"
             },
             {
-                data: "Phone number",
+                data: "phoneNumber",
                 title: "Телефон"
             },
             {
-                data: "Age",
+                data: "age",
                 title: "Возраст"
             },
             {
-                data: "AC",
+                data: "ac",
                 title: "Номер АК"
             },
             {
-                data: "Group",
+                data: "group",
                 title: "Группа"
+            },
+            {
+                data: null,
+                title: "Actions",
+                name: "Actions",
+                render: function (data, type, row, meta) {
+                    return '<a class="selectbtn btn btn-info text-white"  type="submit" href="#">Выбрать</a>';
+                },
+                disabled: true
             }
         ];
 
@@ -163,56 +172,16 @@
             select: 'single',
             responsive: true,
             altEditor: true,     // Enable altEditor
-            buttons: [
-                {
-                    extend: 'selected', // Bind to Selected row
-                    text: 'Редакитровать запись',
-                    name: 'edit'        // do not change name
-                },
-                {
-                    extend: 'selected', // Bind to Selected row
-                    text: 'Удалить запись',
-                    name: 'delete'      // do not change name
-                },
-                {
-                    text: 'Обновить',
-                    name: 'refresh'      // do not change name
-                }
-            ],
-            onAddRow: function(datatable, rowdata, success, error) {
-                $.ajax({
-                    // a tipycal url would be / with type='PUT'
-                    url: url_ws_mock_ok,
-                    type: 'GET',
-                    data: rowdata,
-                    success: success,
-                    error: error
-                });
-            },
-            onDeleteRow: function(datatable, rowdata, success, error) {
-                $.ajax({
-                    // a tipycal url would be /{id} with type='DELETE'
-                    url: url_ws_mock_ok,
-                    type: 'GET',
-                    data: rowdata,
-                    success: success,
-                    error: error
-                });
-            },
-            onEditRow: function(datatable, rowdata, success, error) {
-                $.ajax({
-                    // a tipycal url would be /{id} with type='POST'
-                    url: url_ws_mock_ok,
-                    type: 'GET',
-                    data: rowdata,
-                    success: success,
-                    error: error
-                });
-            },
+            buttons: [],
+
             language: {
                 altEditorUrl: '../../russian.json',
                 url: '//cdn.datatables.net/plug-ins/1.12.0/i18n/ru.json'
             }
+        });
+        $("#myTable").on('click', "[id^='example'] .selectbtn", function (x) {
+               var a= myTable.rows( { selected: true } ).data()[0].id;
+                alert(a);
         });
 
     });
