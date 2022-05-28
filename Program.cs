@@ -267,7 +267,7 @@ void Patients(IApplicationBuilder appBuilder)
                     break;
                 
                 case "PUT":
-                    await CreatePatient(response, request, connection);
+                    
                     break;
                 
                 case "DELETE":
@@ -284,6 +284,9 @@ void Patients(IApplicationBuilder appBuilder)
             {
                 case "GET":
                     await GetAllPatients(response, connection);
+                    break;
+                case "PUT":
+                    await CreatePatient(response,request,connection);
                     break;
             }
         }
@@ -366,6 +369,7 @@ async Task CreatePatient(HttpResponse response, HttpRequest request, NpgsqlConne
 {
     try
     {
+        
         var patient = await request.ReadFromJsonAsync<User>();
         if (patient != null)
         {
@@ -544,7 +548,7 @@ public class User
     public int Id { get; set; }
     public string Name { get; set; } = "";
     public string PhoneNumber { get; set; } = "";
-    public string Email { get; set; } = "";
+    public string? Email { get; set; } = "";
     public string Group { get; set; } = "";
     public string AC { get; set; } = "";
     public int Age { get; set; }
