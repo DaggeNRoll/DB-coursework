@@ -478,6 +478,16 @@ async Task GetKDH(HttpResponse response, NpgsqlConnection connection, int id)
     await response.WriteAsJsonAsync(kdh);
 }
 
+async Task EditKDH(HttpResponse response, HttpRequest request, NpgsqlConnection connection)
+{
+    
+}
+
+async Task GetVisit(HttpResponse response, HttpRequest request, NpgsqlConnection connection)
+{
+    
+}
+
 async Task GetCriteriaForException(HttpResponse response, NpgsqlConnection connection, int id, int visitPriority)
 {
     var query = "SELECT * FROM \"criteriaForException\" WHERE \"criteriaForException\".\"VisitId\" = (SELECT \"Id\"" +
