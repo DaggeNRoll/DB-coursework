@@ -77,14 +77,11 @@
         </nav>
 
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-
-            <div class="shadow card bg-dark">
-                <div>
-                    <table cellpadding="0" cellspacing="0" border="0" class="dataTable table table-striped" id="patients"></table>
-                </div>
-            </div>
             <div class="tab-content" id="nav-tabContent">
                 <div class="tab-pane fade show active" id="nav-Patient" role="tabpanel" aria-labelledby="nav-CDH0-tab">
+                    <div>
+                        <a class ="selectbtn btn btn-info text-white" type="submit" href="#" id="select"></a>
+                    </div>
                     <div>
                         <table cellpadding="0" cellspacing="0" border="0" class="dataTable table table-striped" id="patients"></table>
                     </div>
@@ -147,15 +144,6 @@
             {
                 data: "group",
                 title: "Группа"
-            },
-            {
-                data: null,
-                title: "Actions",
-                name: "Actions",
-                render: function (data, type, row, meta) {
-                    return '<a class="selectbtn btn btn-info text-white"  type="submit" href="#">Выбрать</a>';
-                },
-                disabled: true
             }
         ];
 
@@ -163,7 +151,11 @@
             "sPaginationType": "full_numbers",
 
             ajax: {
-                url : '../js/tsconfig.json',
+                url : '/api/patients',
+                type: 'GET',
+                //data: rowdata,
+                //success: success,
+                //error: error,
                 // our data is an array of objects, in the root node instead of /data node, so we need 'dataSrc' parameter
                 dataSrc : ''
             },
@@ -172,18 +164,43 @@
             select: 'single',
             responsive: true,
             altEditor: true,     // Enable altEditor
-            buttons: [],
+            buttons: [
+                {
+                    extend: 'selected',
+                    text: 'Get selected data',
+                    className: 'btn-primary btn-sm mr-1',
+                    action: function () {
+                        //var count = myTable.row( { selected: true } ).data().id;
+                        alert( JSON.stringify(myTable.row( { selected: true } ).data()));
+
+                        $.ajax({
+                            url:'/api/visit/0',
+                            type: 'GET',
+                            data: JSON.stringify(myTable.row( { selected: true } ).data().id),
+                            contentType: 'application/json;charset=utf-8',
+                        });
+                    }
+                }
+            ],
 
             language: {
                 altEditorUrl: '../../russian.json',
                 url: '//cdn.datatables.net/plug-ins/1.12.0/i18n/ru.json'
             }
         });
-        $("#myTable").on('click', "[id^='example'] .selectbtn", function (x) {
-               var a= myTable.rows( { selected: true } ).data()[0].id;
+
+        /*
+        $('#select').on( 'click', function () {
+                var a = myTable.rows( { selected: true } ).data().id;
                 alert(a);
         });
+        $('#patients').on( 'click', 'tr', function () {
+            var id = myTable.row( this ).data().id;
 
+            alert( 'Clicked row id '+id );
+        } );
+
+         */
     });
 </script>
 
