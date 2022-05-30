@@ -79,9 +79,8 @@
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
             <div class="tab-content" id="nav-tabContent">
                 <div class="tab-pane fade show active" id="nav-Patient" role="tabpanel" aria-labelledby="nav-CDH0-tab">
-                    <div>
-                        <a class ="selectbtn btn btn-info text-white" type="submit" href="#" id="select"></a>
-                    </div>
+                    <hr>
+
                     <div>
                         <table cellpadding="0" cellspacing="0" border="0" class="dataTable table table-striped" id="patients"></table>
                     </div>
@@ -151,8 +150,13 @@
             "sPaginationType": "full_numbers",
 
             ajax: {
-                url : '/api/patients',
-                type: 'GET',
+                //url : '/api/patients',
+                url : '../js/tsconfig.json',
+                //type: 'GET',
+                //data: rowdata,
+                //success: success,
+                //error: error,
+                // our data is an array of objects, in the root node instead of /data node, so we need 'dataSrc' parameter
                 dataSrc : ''
             },
             columns: columnDefs,
@@ -164,22 +168,23 @@
                 {
                     extend: 'selected',
                     text: 'Get selected data',
-                    className: 'btn-primary btn-sm mr-1',
+                    className: 'btn-primary',
                     action: async function () {
                         //var count = myTable.row( { selected: true } ).data().id;
-                        alert( JSON.stringify(myTable.row( { selected: true } ).data()));
+                        //alert( JSON.stringify(myTable.row( { selected: true } ).data()));
 
                         $.ajax({
-                           // url:'/api/visit/0',
                             url:'/api/visit/0',
+                            //url:'js/tsconfig.json',
                             type: 'GET',
                             data: JSON.stringify(myTable.row( { selected: true } ).data()),
                             contentType: 'application/json;charset=utf-8',
                             success: function(){
-                                window.location.href='../html/PatientsList-2.html';
+                                window.location.href='../html/PatientQuestioning_2.html';
                             },
                             error: function(XMLHttpRequest, textStatus, errorThrown) {
                                 alert("Возникла ошибка");
+                                window.location.href='../html/PatientQuestioning_2.html';
                             }
                         });
                         //const message = await response.json();
