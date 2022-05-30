@@ -69,9 +69,9 @@
                 <hr>
                 <nav class="nav nav-tabs flex-column mb-auto" id="nav-tab" role="tablist">
                     <a class="nav-link active" id="nav-Patient-tab" data-bs-toggle="tab" href="#nav-Patient" role="tab" aria-controls="nav-Patient" aria-selected="true">Выбор пациента</a>
-                    <a class="nav-link " id="nav-CDH0-tab" data-bs-toggle="tab" href="#nav-CDH0" role="tab" aria-controls="nav-CDH0" aria-selected="false">Клинико-демографическая характеристика</a>
+                   <!-- <a class="nav-link " id="nav-CDH0-tab" data-bs-toggle="tab" href="#nav-CDH0" role="tab" aria-controls="nav-CDH0" aria-selected="false">Клинико-демографическая характеристика</a>
                     <a class="nav-link" id="nav-KVkl0-tab" data-bs-toggle="tab" href="#nav-KVkl0" role="tab" aria-controls="nav-KVkl0" aria-selected="false">Критерии включения</a>
-                    <a class="nav-link" id="nav-Kiskl0-tab" data-bs-toggle="tab" href="#nav-KIskl0" role="tab" aria-controls="nav-KIskl0" aria-selected="false">Критерии исключения</a>
+                    <a class="nav-link" id="nav-Kiskl0-tab" data-bs-toggle="tab" href="#nav-KIskl0" role="tab" aria-controls="nav-KIskl0" aria-selected="false">Критерии исключения</a> -->
                 </nav>
             </div>
         </nav>
@@ -90,7 +90,7 @@
                     <script type="text/javascript" src="../js/CDH0.js"></script>-->
 
                 </div>
-                <div class="tab-pane fade padding-top" id="nav-CDH0" role="tabpanel" aria-labelledby="nav-CDH0-tab">
+                <!--<div class="tab-pane fade padding-top" id="nav-CDH0" role="tabpanel" aria-labelledby="nav-CDH0-tab">
 
                         <div id="CDHOsurv" class="shadow card" style="display:inline-block;width:100%;"></div>
                         <div id="CDHOres"></div>
@@ -110,7 +110,7 @@
                     <div id="KIskl0res"></div>
                     <script type="text/javascript" src="../js/KIskl0.js"></script>
 
-                </div>
+                </div>-->
             </div>
         </main>
     </div>
@@ -165,16 +165,30 @@
                     extend: 'selected',
                     text: 'Get selected data',
                     className: 'btn-primary btn-sm mr-1',
-                    action: function () {
+                    action: async function () {
                         //var count = myTable.row( { selected: true } ).data().id;
                         alert( JSON.stringify(myTable.row( { selected: true } ).data()));
 
                         $.ajax({
+                           // url:'/api/visit/0',
                             url:'/api/visit/0',
                             type: 'GET',
                             data: JSON.stringify(myTable.row( { selected: true } ).data()),
                             contentType: 'application/json;charset=utf-8',
+                            success: function(){
+                                window.location.href='../html/PatientsList-2.html';
+                            },
+                            error: function(XMLHttpRequest, textStatus, errorThrown) {
+                                alert("Возникла ошибка");
+                            }
                         });
+                        //const message = await response.json();
+                        //if (a){
+
+                        //}else
+                        //
+                            //window.location.href='../html/PatientsList-2.html';
+                        //}
                     }
                 }
             ],

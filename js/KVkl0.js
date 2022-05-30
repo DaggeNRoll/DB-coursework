@@ -1,6 +1,4 @@
-Survey
-    .StylesManager
-    .applyTheme("default");
+Survey.StylesManager.applyTheme("default");
 
 var surveyValueChanged = function (sender, options) {
     var el = document.getElementById(options.name);
@@ -52,22 +50,52 @@ var json1 = {
 
 window.survey2 = new Survey.Model(json1);
 
-survey2
-    .onComplete
+survey2.onComplete.add(function (sender, options)
+{
+    survey2.mode = "show";
+    survey2.clear(false);
+    document.querySelector('#KVkl0res').textContent = "Result JSON:\n" + JSON.stringify(sender.data, null, 3);
+    var mySurvey = sender;
+    var surveyData = sender.data;
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", "/api/surveyresult/result", true);
+    xhr.setRequestHeader("Content-Type", "application/json; charset=utf-8");
+    xhr.onload = xhr.onerror = function () {
+        if (xhr.status === 200)
+        {
+            options.showDataSavingSuccess("Успешный успех"); // you may pass a text parameter to show your own text
+            // Or you may clear all messages:
+            // options.showDataSavingClear();
+        } else
+        {
+            //Error
+            options.showDataSavingError("Бан по причине "+ xhr.status); // you may pass a text parameter to show your own text
+        }
+    };
+    xhr.send(JSON.stringify(sender.data));
+});
+function saveSurveyData(survey) {
+    var data = survey.data;
+    data.pageNo = survey.currentPageNo;
+    window.localStorage.setItem(storageName, JSON.stringify(data));
+}
+survey.onComplete.add(function (sender, options) {
+    saveSurveyData(sender);
+});
+survey.sendResultOnPageNext = true;
 
-    .add(function (sender, options) {
-        survey2.mode = "show";
-        survey2.clear(false);
-        document
-            .querySelector('#KVkl0res')
-            .textContent = "Result JSON:\n" + JSON.stringify(sender.data, null, 3);
-        var mySurvey = sender;
-        var surveyData = sender.data;
-    });
+//var prevData = window.localStorage.getItem(storageName) || null;
 
+if (prevData) {
+    var data = JSON.parse(prevData);
+    survey.data = data;
+    if (data.pageNo) {
+        survey.currentPageNo = data.pageNo;
+    }
+}
 
-survey2.data = {
-
-};
+/*survey2.data = {
+    var data = JSON.parse('api/чётоттам');
+};*/
 
 $("#KVkl0surv").Survey({model: survey2, onValueChanged: surveyValueChanged});
