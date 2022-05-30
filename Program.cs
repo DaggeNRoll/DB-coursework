@@ -22,6 +22,7 @@ app.Map("/api", appBuilder =>
     appBuilder.Map("/kdh", Kdh);
     appBuilder.Map("/criteriaforinclusion", CritForInc);
     appBuilder.Map("/criteriaforexceprion", CritForExc);
+    appBuilder.Map("/visit", Visit);
     /*appBuilder.Map("/html", Html);
     appBuilder.Map("/images", Images);
     appBuilder.Map("/css", Css);
@@ -131,6 +132,42 @@ app.Run(async (context) =>
 });
 
 app.Run();
+
+void Visit(IApplicationBuilder appBuilder)
+{
+    appBuilder.Run(async (context) =>
+    {
+        var response = context.Response;
+        var request = context.Request;
+        var path = request.Path;
+
+        try
+        {
+            var visitPriority = path.Value?.Split("/")[3];
+            if (visitPriority is "0" or "1" or "2" or "3")
+            {
+                switch (request.Method)
+                {
+                    case "GET":
+                        await GetVisit(response, request, connection, Convert.ToInt32(visitPriority));
+                        break;
+                    case "DELETE":
+
+                        break;
+                }
+            }
+            else
+            {
+                throw new Exception("Неверный адрес!");
+            }
+        }
+        catch(Exception)
+        {
+            response.StatusCode = 404;
+            await response.WriteAsJsonAsync(new { message = "Неверный адрес!" });
+        }
+    });
+}
 
 void CritForExc(IApplicationBuilder appBuilder)
 {
@@ -483,9 +520,74 @@ async Task EditKDH(HttpResponse response, HttpRequest request, NpgsqlConnection 
     
 }
 
-async Task GetVisit(HttpResponse response, HttpRequest request, NpgsqlConnection connection)
+async Task GetVisit(HttpResponse response, HttpRequest request, NpgsqlConnection connection, int priority)
 {
-    
+    try
+    {
+        var patient = await request.ReadFromJsonAsync<User>();
+        if (patient != null)
+        {
+            var query = "select * from \"visit\" where \"UserId\" = @Id and \"Priority\" = @Priority";
+            var param = new DynamicParameters();
+            param.Add("@Id", patient.Id);
+            param.Add("@Priority", priority);
+            var visit = connection.Query<Visit>(query, param);
+
+            if (visit != null)
+            {
+                await response.WriteAsJsonAsync(visit);
+            }
+            else
+            {
+                query = "insert into \"visit\" (\"UserId\", \"Date\", \"Priority\") values (@Id, @Date, @Priority)";
+                
+                param.Add("@Date", DateOnly.FromDateTime(DateTime.Today));
+
+                connection.Query(query, param);
+
+                query = "select * from \"visit\" where \"UserId\" = @Id";
+                visit = connection.Query<Visit>(query, param);
+
+                await response.WriteAsJsonAsync(visit);
+            }
+        }
+        else
+        {
+            throw new Exception("Некорректные данные!");
+        }
+    }
+    catch (Exception)
+    {
+        response.StatusCode = 400;
+        await response.WriteAsJsonAsync(new { message = "Некорректные данные!" });
+    }
+}
+
+async Task DeleteVisit(HttpResponse response, HttpRequest request, NpgsqlConnection connection)
+{
+    try
+    {
+        var visit = await request.ReadFromJsonAsync<Visit>();
+
+        if (visit != null)
+        {
+            var query = "delete from \"visit\" where \"Id\"=@Id";
+            var param = new DynamicParameters();
+            param.Add("@Id", visit.Id);
+
+            connection.Query(query, param);
+            await response.WriteAsJsonAsync(visit);
+        }
+        else
+        {
+            throw new Exception("Некорректные данные!");
+        }
+    }
+    catch (Exception)
+    {
+        response.StatusCode = 400;
+        await response.WriteAsJsonAsync(new { message = "Некорректные данные!" });
+    }
 }
 
 async Task GetCriteriaForException(HttpResponse response, NpgsqlConnection connection, int id, int visitPriority)
@@ -639,6 +741,14 @@ public class Visit
     public int UserId { get; set; }
     public DateOnly Date { get; set; }
     public int Priority { get; set; }
+
+    public Visit(int id, int userId, DateOnly date, int priority)
+    {
+        this.Id = id;
+        this.UserId = userId;
+        this.Date = date;
+        this.Priority = priority;
+    }
 }
 
 public class Authorization
