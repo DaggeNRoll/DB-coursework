@@ -153,10 +153,6 @@
             ajax: {
                 url : '/api/patients',
                 type: 'GET',
-                //data: rowdata,
-                //success: success,
-                //error: error,
-                // our data is an array of objects, in the root node instead of /data node, so we need 'dataSrc' parameter
                 dataSrc : ''
             },
             columns: columnDefs,
@@ -176,7 +172,7 @@
                         $.ajax({
                             url:'/api/visit/0',
                             type: 'GET',
-                            data: JSON.stringify(myTable.row( { selected: true } ).data().id),
+                            data: JSON.stringify(myTable.row( { selected: true } ).data()),
                             contentType: 'application/json;charset=utf-8',
                         });
                     }
