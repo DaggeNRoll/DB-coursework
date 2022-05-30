@@ -288,6 +288,12 @@ void Patients(IApplicationBuilder appBuilder)
                 case "PUT":
                     await CreatePatient(response,request,connection);
                     break;
+                case "POST":
+                    await EditPatient(response, request, connection);
+                    break;
+                case "DELETE":
+                    await DeletePatient(response, request, connection);
+                    break;
             }
         }
     });
@@ -399,6 +405,69 @@ async Task CreatePatient(HttpResponse response, HttpRequest request, NpgsqlConne
     }
 }
 
+async Task EditPatient(HttpResponse response, HttpRequest request, NpgsqlConnection connection)
+{
+    try
+    {
+        var beingEditedPatient = await request.ReadFromJsonAsync<User>();
+        if (beingEditedPatient != null)
+        {
+            var query = "UPDATE \"user\" SET \"Name\"=@Name, \"PhoneNumber\"=@PhoneNumber, \"Email\"=@Email," +
+                        " \"Group\"=@Group, \"AC\"=@Ac, \"Age\"=@Age WHERE \"Id\"=@Id;";
+
+            var param = new DynamicParameters();
+            param.Add("@Name", beingEditedPatient.Name);
+            param.Add("@PhoneNumber", beingEditedPatient.PhoneNumber);
+            param.Add("@Email", beingEditedPatient.Email);
+            param.Add("@Group", beingEditedPatient.Group);
+            param.Add("@Ac", beingEditedPatient.AC);
+            param.Add("@Age", beingEditedPatient.Age);
+            param.Add("@Id", beingEditedPatient.Id);
+
+            connection.Query(query, param);
+            await response.WriteAsJsonAsync(beingEditedPatient);
+        }
+        else
+        {
+            throw new Exception("Некорректные данные!");
+        }
+        
+    }
+    catch (Exception)
+    {
+        response.StatusCode = 400;
+        await response.WriteAsJsonAsync(new { message = "Некорректные данные!" });
+    }
+}
+
+async Task DeletePatient(HttpResponse response, HttpRequest request, NpgsqlConnection connection)
+{
+    try
+    {
+        
+        var patients = await request.ReadFromJsonAsync<List<User>>();
+        var patient = patients[0];
+        if (patient != null)
+        {
+            var query = "DELETE FROM \"user\" WHERE \"Id\"=@Id";
+
+            var param = new DynamicParameters();
+            param.Add("@Id", patient.Id);
+            connection.Query(query, param);
+            await response.WriteAsJsonAsync(patient);
+        }
+        else
+        {
+            throw new Exception("Неверные данные!");
+        }
+    }
+    catch (Exception)
+    {
+        response.StatusCode = 400;
+        await response.WriteAsJsonAsync(new { message = "Некорректные данные!" });
+    }
+}
+
 async Task GetKDH(HttpResponse response, NpgsqlConnection connection, int id)
 {
     var query = "SELECT * FROM \"kdh\" WHERE \"kdh\".\"VisitId\" = (SELECT \"Id\" FROM \"visit\" WHERE \"visit\".\"UserId\" = @Id) ";
@@ -407,6 +476,16 @@ async Task GetKDH(HttpResponse response, NpgsqlConnection connection, int id)
     param.Add("@Id",id);
     var kdh = connection.Query<KDH>(query, param);
     await response.WriteAsJsonAsync(kdh);
+}
+
+async Task EditKDH(HttpResponse response, HttpRequest request, NpgsqlConnection connection)
+{
+    
+}
+
+async Task GetVisit(HttpResponse response, HttpRequest request, NpgsqlConnection connection)
+{
+    
 }
 
 async Task GetCriteriaForException(HttpResponse response, NpgsqlConnection connection, int id, int visitPriority)
