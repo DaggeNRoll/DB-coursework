@@ -143,12 +143,12 @@ void Visit(IApplicationBuilder appBuilder)
 
         try
         {
-            var visitPriority = path.Value?.Split("/")[3];
+            var visitPriority = path.Value?.Split("/")[1];
             if (visitPriority is "0" or "1" or "2" or "3")
             {
                 switch (request.Method)
                 {
-                    case "GET":
+                    case "POST":
                         await GetVisit(response, request, connection, Convert.ToInt32(visitPriority));
                         break;
                     case "DELETE":
@@ -180,7 +180,7 @@ void CritForExc(IApplicationBuilder appBuilder)
         switch (request.Method)
         {
             case "GET":
-                await GetCriteriaForException(response, connection, Convert.ToInt32(path.Value?.Split("/")[3]), Convert.ToInt32(path.Value?.Split("/")[4])); //обработка неверного ввода айди
+               
                 break;
                 
             case "PUT":
@@ -269,7 +269,7 @@ void CritForInc(IApplicationBuilder appBuilder)
         switch (request.Method)
         {
             case "GET":
-                await GetCriteriaForInclusion(response, connection, Convert.ToInt32(path.Value?.Split("/")[3]), Convert.ToInt32(path.Value?.Split("/")[4])); //обработка неверного ввода айди
+               
                 break;
                 
             case "PUT":
@@ -347,16 +347,13 @@ void Kdh(IApplicationBuilder appBuilder)
         switch (request.Method)
         {
             case "GET":
-                await GetKDH(response, connection, Convert.ToInt32(path.Value?.Split("/")[3])); //обработка неверного ввода айди
+                await GetKDH(response, request, connection);
                 break;
                 
             case "PUT":
                     
                 break;
-                
-            case "DELETE":
-                    
-                break;
+            
                 
             case "POST":
                 break;
@@ -505,19 +502,46 @@ async Task DeletePatient(HttpResponse response, HttpRequest request, NpgsqlConne
     }
 }
 
-async Task GetKDH(HttpResponse response, NpgsqlConnection connection, int id)
+async Task GetKDH(HttpResponse response, HttpRequest request, NpgsqlConnection connection)
 {
-    var query = "SELECT * FROM \"kdh\" WHERE \"kdh\".\"VisitId\" = (SELECT \"Id\" FROM \"visit\" WHERE \"visit\".\"UserId\" = @Id) ";
+    try
+    {
+        var visit = await request.ReadFromJsonAsync<Visit>();
 
-    var param = new DynamicParameters();
-    param.Add("@Id",id);
-    var kdh = connection.Query<KDH>(query, param);
-    await response.WriteAsJsonAsync(kdh);
-}
+        if (visit != null)
+        {
+            var query = "select * from \"kdh\" where \"VisitId\" = @Id";
+            var param = new DynamicParameters();
+            param.Add("@Id", visit.Id);
 
-async Task EditKDH(HttpResponse response, HttpRequest request, NpgsqlConnection connection)
-{
-    
+            var kdh = connection.Query<KDH>(query, param);
+
+            if (kdh.Any())
+            {
+                await response.WriteAsJsonAsync(kdh);
+            }
+            else
+            {
+                query = "insert into \"kdh\" (\"VisitId\") values (@Id)";
+                connection.Query(query, param);
+
+                query = "select * from \"kdh\" where \"VisitId\" = @Id";
+                kdh = connection.Query<KDH>(query, param);
+
+                await response.WriteAsJsonAsync(kdh);
+            }
+        }
+        else
+        {
+            throw new Exception("Где-то ошибка!");
+        }
+    }
+    catch (Exception)
+    {
+        response.StatusCode = 400;
+        await response.WriteAsJsonAsync(new
+            { message = "Где-то снова ошибка. Можно уже закончить наконец-то этот курсач?" });
+    }
 }
 
 async Task GetVisit(HttpResponse response, HttpRequest request, NpgsqlConnection connection, int priority)
@@ -533,15 +557,15 @@ async Task GetVisit(HttpResponse response, HttpRequest request, NpgsqlConnection
             param.Add("@Priority", priority);
             var visit = connection.Query<Visit>(query, param);
 
-            if (visit != null)
+            if (visit.Any())
             {
                 await response.WriteAsJsonAsync(visit);
             }
             else
             {
-                query = "insert into \"visit\" (\"UserId\", \"Date\", \"Priority\") values (@Id, @Date, @Priority)";
+                query = "insert into \"visit\" (\"UserId\", \"Date\", \"Priority\") values (@Id, @Date::date, @Priority)";
                 
-                param.Add("@Date", DateOnly.FromDateTime(DateTime.Today));
+                param.Add("@Date", DateTime.Today);
 
                 connection.Query(query, param);
 
@@ -605,116 +629,48 @@ async Task GetCriteriaForException(HttpResponse response, NpgsqlConnection conne
     await response.WriteAsJsonAsync(criteriaForException);
 }
 
-async Task GetCriteriaForInclusion(HttpResponse response, NpgsqlConnection connection, int id, int visitPriority)
-{
-    var query = "SELECT * FROM \"criteriaForInclusion\" WHERE \"criteriaForInclusion\".\"VisitId\" = (SELECT \"Id\"" +
-                " FROM \"visit\" WHERE \"visit\".\"UserId\" = @Id AND \"visit\".\"Priority\"" +
-                "= @VisitPriority)";
-
-    var param = new DynamicParameters();
-    param.Add("@Id",id);
-    param.Add("@VisitPriority", visitPriority);
-
-    var criteriaForInclusion = connection.Query<CriteriaForInclusion>(query, param);
-
-    await response.WriteAsJsonAsync(criteriaForInclusion);
-}
-
-async Task GetAllPeople(HttpResponse response)
-{
-    await response.WriteAsJsonAsync(users);
-}
-
-async Task GetPerson(string? id, HttpResponse response, HttpRequest request)
-{
-    Person? user = users.FirstOrDefault((u) => u.Id == id);
-    if (user != null)
-        await response.WriteAsJsonAsync(user);
-    else
-    {
-        response.StatusCode = 404;
-        await response.WriteAsJsonAsync(new { message = "Пользователь не найден!" });
-    }
-}
-
-async Task CreatePerson(HttpResponse response, HttpRequest request)
+async Task GetCriteriaForInclusion(HttpResponse response, HttpRequest request, NpgsqlConnection connection)
 {
     try
     {
-        var user = await request.ReadFromJsonAsync<Person>();
-        if (user != null)
+        var visit = await request.ReadFromJsonAsync<Visit>();
+
+        if (visit != null)
         {
-            user.Id = Guid.NewGuid().ToString();
-            users.Add(user);
-            await response.WriteAsJsonAsync(user); 
+            var querySelect = "select * from \"criteriaForInclusion\" where \"VisitId\" = @Id";
+            var param = new DynamicParameters();
+            param.Add("@Id", visit.Id);
+
+            var criteriaForInclusion = connection.Query(querySelect, param);
+
+            if (criteriaForInclusion.Any())
+            {
+                await response.WriteAsJsonAsync(criteriaForInclusion);
+            }
+            else
+            {
+                var queryInsert = "insert into \"criteriaForInclusion\" (\"VisitId\") values (@Id)";
+                connection.Query(queryInsert, param);
+
+                criteriaForInclusion = connection.Query<CriteriaForInclusion>(querySelect, param);
+                await response.WriteAsJsonAsync(criteriaForInclusion);
+            }
         }
         else
         {
-            throw new Exception("Некорректные данные!");
+            throw new Exception("Ошибка! Опять вкалывать!");
         }
     }
     catch (Exception)
     {
         response.StatusCode = 400;
-        await response.WriteAsJsonAsync(new { message = "Некорректные данные!" });
-    }
-}
-
-async Task UpdatePerson(HttpResponse response, HttpRequest request)
-{
-    try
-    {
-        Person? userData = await request.ReadFromJsonAsync<Person>();
-        if(userData != null)
+        await response.WriteAsJsonAsync(new
         {
-            var user = users.FirstOrDefault((u) => u.Id == userData.Id);
-            if(user != null)
-            {
-                user.Age = userData.Age;
-                user.Name = userData.Name;
-                await response.WriteAsJsonAsync(user);
-            }
-            else
-            {
-                response.StatusCode=404;
-                await response.WriteAsJsonAsync(new { message = "Пользователь не найден!"});
-            }
-        }
-        else
-        {
-            throw new Exception("Некорректные данные");
-        }
-    }
-    catch (Exception)
-    {
-        response.StatusCode=404;
-        await response.WriteAsJsonAsync(new { message ="Некорректные данные!"});
+            message = "Ошибка опять снова какая-то. Надеюсь искренне, что это сообщение" +
+                      "никогда не отправится"
+        });
     }
 }
-
-async Task WriteToDB(string conString, HttpResponse response, HttpRequest request)
-{
-    using var connection = new NpgsqlConnection(conString);
-    await connection.QueryAsync("INSERT INTO kdh VALUES(1, 1, 0, 32, true, true, 'abc', 0, 0, 0, true, 'abc', 1, 1, true, 0)");
-}
-
-async Task DeletePerson(string? id, HttpResponse response, HttpRequest request)
-{
-    Person? user = users.FirstOrDefault((u) => u.Id == id);
-
-    if( user != null)
-    {
-        users.Remove(user);
-        await response.WriteAsJsonAsync(user);
-    }
-    else
-    {
-        response.StatusCode=404;
-        await response.WriteAsJsonAsync(new {message = "Пользователь не найден"});
-    }
-}
-
-
 
 
 public class Person
@@ -739,10 +695,12 @@ public class Visit
 {
     public int Id { get; set; }
     public int UserId { get; set; }
-    public DateOnly Date { get; set; }
+    public DateTime Date { get; set; }
     public int Priority { get; set; }
+    
+    public Visit(){}
 
-    public Visit(int id, int userId, DateOnly date, int priority)
+    public Visit(int id, int userId, DateTime date, int priority)
     {
         this.Id = id;
         this.UserId = userId;
@@ -763,37 +721,37 @@ public class KDH
 {
     public int Id { get; set; }
     public int VisitId { get; set; }
-    public int Gender { get; set; }
+    public int? Gender { get; set; }
     public int? LengthOfMenopause { get; set; }
-    public int AggravatedHeredity { get; set; }
-    public bool LiveWithFamily { get; set; }
-    public string FamilyStatus { get; set; } = "";
-    public int Children { get; set; }
-    public int PhysicalActivity { get; set; }
-    public int WorkStatus { get; set; }
-    public bool HasOccupationalHazards { get; set; }
+    public int? AggravatedHeredity { get; set; }
+    public bool? LiveWithFamily { get; set; }
+    public string? FamilyStatus { get; set; } = "";
+    public int? Children { get; set; }
+    public int? PhysicalActivity { get; set; }
+    public int? WorkStatus { get; set; }
+    public bool? HasOccupationalHazards { get; set; }
     public string? OccupationalHazards { get; set; }
-    public bool Smoking { get; set; }
+    public bool? Smoking { get; set; }
     public int? NumberOfCigarettes { get; set; }
-    public bool Dislipidemia { get; set; }
-    public int Hypertension { get; set; }
+    public bool? Dislipidemia { get; set; }
+    public int? Hypertension { get; set; }
 }
 
 public class CriteriaForException
 {
-    public bool SymptomaticAG { get; set; }
-    public bool Cardiomyopathy { get; set; }
-    public bool HeartValvePathology { get; set; }
-    public bool HeartRateAndConductancePathology { get; set; }
-    public bool EndocrineDisease { get; set; }
-    public bool ChronicLiverRenalFailure { get; set; }
-    public bool OncoHemoDisease { get; set; }
-    public bool CollagenOutbreak { get; set; }
-    public bool MorbideObesity { get; set; }
-    public bool InflammatoryBowelDisease { get; set; }
-    public bool OOP { get; set; }
-    public bool OperationAntibioticAntiInflamatoryTherapy { get; set; }
-    public bool PsychotropicDrug { get; set; }
+    public bool? SymptomaticAG { get; set; }
+    public bool? Cardiomyopathy { get; set; }
+    public bool? HeartValvePathology { get; set; }
+    public bool? HeartRateAndConductancePathology { get; set; }
+    public bool? EndocrineDisease { get; set; }
+    public bool? ChronicLiverRenalFailure { get; set; }
+    public bool? OncoHemoDisease { get; set; }
+    public bool? CollagenOutbreak { get; set; }
+    public bool? MorbideObesity { get; set; }
+    public bool? InflammatoryBowelDisease { get; set; }
+    public bool? OOP { get; set; }
+    public bool? OperationAntibioticAntiInflamatoryTherapy { get; set; }
+    public bool? PsychotropicDrug { get; set; }
     public int CriteriaForExceptionId { get; set; }
     public bool? RASBlockers { get; set; }
     public int VisitId { get; set; }
@@ -803,10 +761,10 @@ public class CriteriaForException
 public class CriteriaForInclusion
 {
     public int Id { get; set; }
-    public bool AgeBetween40_65 { get; set; }
-    public bool LowAndModerateRiskOfCardiovascularComplications { get; set; }
-    public bool ParticipationAgreement { get; set; }
-    public bool Hypertension { get; set; }
-    public bool SRBOrDOrA { get; set; }
+    public bool? AgeBetween40_65 { get; set; }
+    public bool? LowAndModerateRiskOfCardiovascularComplications { get; set; }
+    public bool? ParticipationAgreement { get; set; }
+    public bool? Hypertension { get; set; }
+    public bool? SRBOrDOrA { get; set; }
     public int VisitId { get; set; }
 }
