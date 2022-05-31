@@ -181,7 +181,9 @@
                             contentType: 'application/json;charset=utf-8',
                             success: function(response){
                                 var rest = response;
-                                sessionStorage.setItem('visit', rest);
+                                var id = JSON.parse(JSON.stringify(rest)).id;
+                                
+                                sessionStorage.setItem('visitId', id);
                                 window.location.href='../html/PatientQuestioning_2.html';
 
                             },

@@ -7,21 +7,22 @@ using Npgsql;
 
 List<Person> users = new List<Person>
 {
-    new() {Id = Guid.NewGuid().ToString(), Name="Van", Age=69},
-    new(){Id = Guid.NewGuid().ToString(), Name="Billy", Age=38},
-    new() {Id = Guid.NewGuid().ToString(), Name="Ivan", Age=25}
+    new() { Id = Guid.NewGuid().ToString(), Name = "Van", Age = 69 },
+    new() { Id = Guid.NewGuid().ToString(), Name = "Billy", Age = 38 },
+    new() { Id = Guid.NewGuid().ToString(), Name = "Ivan", Age = 25 }
 };
 
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
-using var connection = new NpgsqlConnection(builder.Configuration.GetConnectionString("KursachDb"));//могут быть проблемы с лямбдами
+using var connection =
+    new NpgsqlConnection(builder.Configuration.GetConnectionString("KursachDb")); //могут быть проблемы с лямбдами
 
 app.Map("/api", appBuilder =>
 {
     appBuilder.Map("/patients", Patients);
     appBuilder.Map("/kdh", Kdh);
     appBuilder.Map("/criteriaforinclusion", CritForInc);
-    appBuilder.Map("/criteriaforexceprion", CritForExc);
+    appBuilder.Map("/criteriaforexception", CritForExc);
     appBuilder.Map("/visit", Visit);
     /*appBuilder.Map("/html", Html);
     appBuilder.Map("/images", Images);
@@ -29,7 +30,6 @@ app.Map("/api", appBuilder =>
     appBuilder.Map("/js", Js);
     appBuilder.Map("/data", Data);*/
 });
-
 
 
 /*app.Run(async (context) =>
@@ -108,24 +108,23 @@ app.Run(async (context) =>
 
     switch (path.Value?.Split("/").Length)
     {
-       
         case 3 when path.Value?.Split("/")[1] == "images":
             await SendImage(response, path.Value?.Split("/")[2]);
             break;
         case 3 when path.Value?.Split("/")[1] == "css":
             await SendCss(response, path.Value?.Split("/")[2]);
             break;
-        case 3 when path.Value?.Split("/")[1]=="html":
+        case 3 when path.Value?.Split("/")[1] == "html":
             await SendHtml(response, path.Value?.Split("/")[2]);
             break;
-        case 3 when path.Value?.Split("/")[1]=="js":
+        case 3 when path.Value?.Split("/")[1] == "js":
             await SendJs(response, path.Value?.Split("/")[2]);
             break;
-        case 3 when path.Value?.Split("/")[1]=="data":
+        case 3 when path.Value?.Split("/")[1] == "data":
             await SendData(response, path.Value?.Split("/")[2]);
             break;
         default:
-            response.ContentType="text/html; charset=utf-8";
+            response.ContentType = "text/html; charset=utf-8";
             await response.SendFileAsync("html/PatientsList-2.html");
             break;
     }
@@ -152,7 +151,7 @@ void Visit(IApplicationBuilder appBuilder)
                         await GetVisit(response, request, connection, Convert.ToInt32(visitPriority));
                         break;
                     case "DELETE":
-
+                        await DeleteVisit(response, request, connection);
                         break;
                 }
             }
@@ -161,7 +160,7 @@ void Visit(IApplicationBuilder appBuilder)
                 throw new Exception("Неверный адрес!");
             }
         }
-        catch(Exception)
+        catch (Exception)
         {
             response.StatusCode = 404;
             await response.WriteAsJsonAsync(new { message = "Неверный адрес!" });
@@ -171,7 +170,7 @@ void Visit(IApplicationBuilder appBuilder)
 
 void CritForExc(IApplicationBuilder appBuilder)
 {
-    appBuilder.Run(async(context) =>
+    appBuilder.Run(async (context) =>
     {
         var response = context.Response;
         var request = context.Request;
@@ -180,87 +179,26 @@ void CritForExc(IApplicationBuilder appBuilder)
         switch (request.Method)
         {
             case "GET":
-               
+                await GetCriteriaForException(response, request, connection);
                 break;
-                
+
             case "PUT":
-                    
+
                 break;
-                
+
             case "DELETE":
-                    
+
                 break;
-                
+
             case "POST":
                 break;
-        
         }
-    });
-}
-
-void Html(IApplicationBuilder appBuilder)
-{
-    appBuilder.Run(async (context) =>
-    {
-        var response = context.Response;
-        var request = context.Request;
-        var path = request.Path;
-
-        await SendHtml(response, path.Value?.Split("/")[2]);
-    });
-}
-
-void Images(IApplicationBuilder appBuilder)
-{
-    appBuilder.Run(async (context) =>
-    {
-        var response = context.Response;
-        var request = context.Request;
-        var path = request.Path;
-
-        await SendImage(response, path.Value?.Split("/")[2]);
-    });
-}
-
-void Css(IApplicationBuilder appBuilder)
-{
-    appBuilder.Run(async (context) =>
-    {
-        var response = context.Response;
-        var request = context.Request;
-        var path = request.Path;
-
-        await SendCss(response, path.Value?.Split("/")[2]);
-    });
-}
-
-void Js(IApplicationBuilder appBuilder)
-{
-    appBuilder.Run(async (context) =>
-    {
-        var response = context.Response;
-        var request = context.Request;
-        var path = request.Path;
-
-        await SendJs(response, path.Value?.Split("/")[2]);
-    });
-}
-
-void Data(IApplicationBuilder appBuilder)
-{
-    appBuilder.Run(async (context) =>
-    {
-        var response = context.Response;
-        var request = context.Request;
-        var path = request.Path;
-
-        await SendData(response, path.Value?.Split("/")[2]);
     });
 }
 
 void CritForInc(IApplicationBuilder appBuilder)
 {
-    appBuilder.Run(async(context) =>
+    appBuilder.Run(async (context) =>
     {
         var response = context.Response;
         var request = context.Request;
@@ -269,20 +207,19 @@ void CritForInc(IApplicationBuilder appBuilder)
         switch (request.Method)
         {
             case "GET":
-               
+                await GetCriteriaForInclusion(response, request, connection);
                 break;
-                
+
             case "PUT":
-                    
+
                 break;
-                
+
             case "DELETE":
-                    
+
                 break;
-                
+
             case "POST":
                 break;
-        
         }
     });
 }
@@ -302,15 +239,15 @@ void Patients(IApplicationBuilder appBuilder)
                 case "GET":
                     await GetPatient(response, connection, Convert.ToInt32(path.Value?.Split("/")[3]));
                     break;
-                
+
                 case "PUT":
-                    
+
                     break;
-                
+
                 case "DELETE":
-                    
+
                     break;
-                
+
                 case "POST":
                     break;
             }
@@ -323,7 +260,7 @@ void Patients(IApplicationBuilder appBuilder)
                     await GetAllPatients(response, connection);
                     break;
                 case "PUT":
-                    await CreatePatient(response,request,connection);
+                    await CreatePatient(response, request, connection);
                     break;
                 case "POST":
                     await EditPatient(response, request, connection);
@@ -349,15 +286,14 @@ void Kdh(IApplicationBuilder appBuilder)
             case "GET":
                 await GetKDH(response, request, connection);
                 break;
-                
+
             case "PUT":
-                    
+                await EditKdh(response, request, connection, Convert.ToInt32(path.Value?.Split("/")[1]));
                 break;
-            
-                
+
+
             case "POST":
                 break;
-        
         }
     });
 }
@@ -366,6 +302,7 @@ async Task SendData(HttpResponse response, string? dataFilePath)
 {
     await response.SendFileAsync("data/" + dataFilePath);
 }
+
 async Task SendCss(HttpResponse response, string? cssFilePath)
 {
     await response.SendFileAsync("css/" + cssFilePath);
@@ -395,13 +332,12 @@ async Task GetAllPatients(HttpResponse response, NpgsqlConnection connection)
 
 async Task GetPatient(HttpResponse response, NpgsqlConnection connection, int id)
 {
-    
     var query = "SELECT * FROM \"user\" WHERE \"Id\" = @Id";
 
     var param = new DynamicParameters();
     param.Add("@Id", id);
-    
-    var patient = connection.Query<User>(query,param);
+
+    var patient = connection.Query<User>(query, param);
     await response.WriteAsJsonAsync(patient);
 }
 
@@ -409,7 +345,6 @@ async Task CreatePatient(HttpResponse response, HttpRequest request, NpgsqlConne
 {
     try
     {
-        
         var patient = await request.ReadFromJsonAsync<User>();
         if (patient != null)
         {
@@ -465,7 +400,6 @@ async Task EditPatient(HttpResponse response, HttpRequest request, NpgsqlConnect
         {
             throw new Exception("Некорректные данные!");
         }
-        
     }
     catch (Exception)
     {
@@ -478,11 +412,11 @@ async Task DeletePatient(HttpResponse response, HttpRequest request, NpgsqlConne
 {
     try
     {
-        
         var patients = await request.ReadFromJsonAsync<List<User>>();
-        var patient = patients[0];
-        if (patient != null)
+        
+        if (patients.Any())
         {
+            var patient = patients[0];
             var query = "DELETE FROM \"user\" WHERE \"Id\"=@Id";
 
             var param = new DynamicParameters();
@@ -540,7 +474,47 @@ async Task GetKDH(HttpResponse response, HttpRequest request, NpgsqlConnection c
     {
         response.StatusCode = 400;
         await response.WriteAsJsonAsync(new
-            { message = "Где-то снова ошибка. Можно уже закончить наконец-то этот курсач?" });
+            { message = "Где-то снова ошибка. Можно уже закончить наконец этот курсач?" });
+    }
+}
+
+async Task EditKdh(HttpResponse response, HttpRequest request, NpgsqlConnection connection, int id)
+{
+    try
+    {
+        var kdh = await request.ReadFromJsonAsync<KDH>();
+
+        if (kdh != null)
+        {
+            var query = "update \"kdh\" set \"Gender\" = @Gender, \"LengthOfMenopause\" = @Menopause, " +
+                        "\"AggravatedHeredity\" = @Heredity, \"LiveWithFamily\" = @Live, " +
+                        "\"FamilyStatus\" = @Family, \"Children\" = @Children, \"PhysicalActivity\" = @PhActivity, " +
+                        "\"WorkStatus\" = @Work, \"HasOccupationalHazards\" = @HasHazards, \"OccupationalHazards = " +
+                        "@Hazards\", \"Smoking\" = @Smoking, \"NumberOfCigarettes\" = @Cigarettes, " +
+                        "\"Dislipidemia\" = @Dislipidemia, \"Hypertension\" = @Hypertension where ";
+
+            var param = new
+            {
+                Gender = kdh.Gender, Menopause = kdh.LengthOfMenopause, Heredity = kdh.AggravatedHeredity,
+                Live = kdh.LiveWithFamily, Family = kdh.FamilyStatus, Children = kdh.Children,
+                PhActivity = kdh.PhysicalActivity,
+                Work = kdh.WorkStatus, HasHazards = kdh.HasOccupationalHazards, Hazards = kdh.OccupationalHazards,
+                Smoking = kdh.Smoking, Cigarettes = kdh.NumberOfCigarettes, Dislipidemia = kdh.Dislipidemia,
+                Hypertension = kdh.Hypertension
+            };
+            connection.Query(query, param);
+
+            await response.WriteAsJsonAsync(kdh);
+        }
+        else
+        {
+            throw new Exception("Некорректные данные");
+        }
+    }
+    catch (Exception)
+    {
+        response.StatusCode = 400;
+        await response.WriteAsJsonAsync(new { message = "Некорректные данные!" });
     }
 }
 
@@ -559,12 +533,13 @@ async Task GetVisit(HttpResponse response, HttpRequest request, NpgsqlConnection
 
             if (visit.Any())
             {
-                await response.WriteAsJsonAsync(visit);
+                await response.WriteAsJsonAsync(visit.ToList()[0]);
             }
             else
             {
-                query = "insert into \"visit\" (\"UserId\", \"Date\", \"Priority\") values (@Id, @Date::date, @Priority)";
-                
+                query =
+                    "insert into \"visit\" (\"UserId\", \"Date\", \"Priority\") values (@Id, @Date::date, @Priority)";
+
                 param.Add("@Date", DateTime.Today);
 
                 connection.Query(query, param);
@@ -572,7 +547,7 @@ async Task GetVisit(HttpResponse response, HttpRequest request, NpgsqlConnection
                 query = "select * from \"visit\" where \"UserId\" = @Id";
                 visit = connection.Query<Visit>(query, param);
 
-                await response.WriteAsJsonAsync(visit);
+                await response.WriteAsJsonAsync(visit.ToList()[0]);
             }
         }
         else
@@ -614,19 +589,43 @@ async Task DeleteVisit(HttpResponse response, HttpRequest request, NpgsqlConnect
     }
 }
 
-async Task GetCriteriaForException(HttpResponse response, NpgsqlConnection connection, int id, int visitPriority)
+async Task GetCriteriaForException(HttpResponse response, HttpRequest request, NpgsqlConnection connection)
 {
-    var query = "SELECT * FROM \"criteriaForException\" WHERE \"criteriaForException\".\"VisitId\" = (SELECT \"Id\"" +
-                " FROM \"visit\" WHERE \"visit\".\"UserId\" = @Id AND \"visit\".\"Priority\"" +
-                "= @VisitPriority)";
+    try
+    {
+        var visit = await request.ReadFromJsonAsync<Visit>();
 
-    var param = new DynamicParameters();
-    param.Add("@Id",id);
-    param.Add("@VisitPriority", visitPriority);
+        if (visit != null)
+        {
+            var querySelect = "select * from \"criteriaForException\" where \"VisitId\" = @Id";
+            var param = new DynamicParameters();
+            param.Add("@Id", visit.Id);
 
-    var criteriaForException = connection.Query<CriteriaForException>(query, param);
+            var criteriaForException = connection.Query<CriteriaForException>(querySelect, param);
 
-    await response.WriteAsJsonAsync(criteriaForException);
+            if (criteriaForException.Any())
+            {
+                await response.WriteAsJsonAsync(criteriaForException);
+            }
+            else
+            {
+                var queryInsert = "insert into \"criteriaForException\" (\"VisitId\" values (@Id))";
+                connection.Query(queryInsert, param);
+
+                criteriaForException = connection.Query<CriteriaForException>(querySelect, param);
+                await response.WriteAsJsonAsync(criteriaForException);
+            }
+        }
+        else
+        {
+            throw new Exception("Что-то пошло не по плану");
+        }
+    }
+    catch (Exception)
+    {
+        response.StatusCode = 400;
+        await response.WriteAsJsonAsync(new { message = "Это не баг, а фича!" });
+    }
 }
 
 async Task GetCriteriaForInclusion(HttpResponse response, HttpRequest request, NpgsqlConnection connection)
@@ -641,7 +640,7 @@ async Task GetCriteriaForInclusion(HttpResponse response, HttpRequest request, N
             var param = new DynamicParameters();
             param.Add("@Id", visit.Id);
 
-            var criteriaForInclusion = connection.Query(querySelect, param);
+            var criteriaForInclusion = connection.Query<CriteriaForInclusion>(querySelect, param);
 
             if (criteriaForInclusion.Any())
             {
@@ -697,8 +696,10 @@ public class Visit
     public int UserId { get; set; }
     public DateTime Date { get; set; }
     public int Priority { get; set; }
-    
-    public Visit(){}
+
+    public Visit()
+    {
+    }
 
     public Visit(int id, int userId, DateTime date, int priority)
     {
@@ -731,7 +732,7 @@ public class KDH
     public int? WorkStatus { get; set; }
     public bool? HasOccupationalHazards { get; set; }
     public string? OccupationalHazards { get; set; }
-    public bool? Smoking { get; set; }
+    public int? Smoking { get; set; }
     public int? NumberOfCigarettes { get; set; }
     public bool? Dislipidemia { get; set; }
     public int? Hypertension { get; set; }
@@ -755,7 +756,6 @@ public class CriteriaForException
     public int CriteriaForExceptionId { get; set; }
     public bool? RASBlockers { get; set; }
     public int VisitId { get; set; }
-    
 }
 
 public class CriteriaForInclusion

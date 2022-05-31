@@ -224,9 +224,12 @@ var json = {
         },
     ]
 };
-let rest = sessionStorage.getItem('visit');
-var id = JSON.stringify(rest.id)
-alert(id);
+let visitId = sessionStorage.getItem("visitId");
+
+alert(visitId);
+
+
+
 window.survey = new Survey.Model(json);
 function loadState(survey) {
     $.ajax({
