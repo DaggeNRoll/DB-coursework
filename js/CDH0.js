@@ -25,12 +25,12 @@ var json = {
             "type": "panel",
             "name": "age_sex",
             "elements": [
-                {
+                {"isRequired": true,
                     "type": "text",
                     "name": "Age",
                     "title": "Возраст:",
                     "inputType": "number"
-                }, {
+                }, {"isRequired": true,
                     "type": "radiogroup",
                     "name": "Gender",
                     "title": "Пол",
@@ -47,7 +47,7 @@ var json = {
                         ],
                     "colCount": 2
                 },
-                {
+                {"isRequired": true,
                     "type": "text",
                     "name": "LengthOfMenopause",
                     "title": "Продолжительность менопаузы",
@@ -59,33 +59,33 @@ var json = {
             "colCount": 2
         },
 
-        {
+        {"isRequired": true,
             "type": "text",
             "name": "FamilyStatus",
             "title": "Семейное положение:",
             "inputType": "text"
         },
-        {
+        {"isRequired": true,
             "type": "boolean",
             "name": "AggravatedHeredity",
             "title": "Отягощенная наследственность:",
             "labelTrue": "Да",
             "labelFalse": "Нет",
         },
-        {
+        {"isRequired": true,
             "type": "boolean",
             "name": "LiveWithFamily",
             "title": "Живёт",
             "labelTrue": "Один",
             "labelFalse": "C семьей",
         },
-        {
+        {"isRequired": true,
             "type": "text",
             "name": "Children",
             "title": "Дети:",
             "inputType": "number"
         },
-        {
+        {"isRequired": true,
             "type": "radiogroup",
             "name": "PhysicalActivity",
             "title": "Физическая активность:",
@@ -140,21 +140,21 @@ var json = {
                             ],
                         "colCount": 1
                     },
-        {
+        {"isRequired": true,
             "type": "boolean",
             "name": "HasOccupationalHazards",
             "title": "Проф. Вредности",
             "labelTrue": "Есть",
             "labelFalse": "Нет",
         },
-        {
+        {"isRequired": true,
             "type": "text",
             "visibleIf": "{HasOccupationalHazards}= 1",
             "name": "OccupationalHazards",
             "title": "Если есть, то какие:",
             "inputType": "text"
         },
-        {
+        {"isRequired": true,
             "type": "radiogroup",
             "name": "Smoking",
             "title": "Курение:",
@@ -174,14 +174,14 @@ var json = {
                 }
             ],
         },
-        {
+        {"isRequired": true,
             "type": "text",
             "visibleIf": "{Smoking}= 2",
             "name": "NumberOfCigaretts",
             "title": "Число сиграет:",
             "inputType": "number"
         },
-        {
+        {"isRequired": true,
             "type": "radiogroup",
             "name": "Hypertension",
             "title": "Артериальная гипертензия:",
@@ -205,7 +205,7 @@ var json = {
                     }
                 ],
         },
-        {
+        {"isRequired": true,
             "type": "boolean",
             "name": "Dislipidemia",
             "title": "Дислипидемия",
@@ -216,17 +216,50 @@ var json = {
 };
 
 window.survey = new Survey.Model(json);
+function loadState(survey) {
+    $.ajax({
+        url: '/api/kdh',
+        type: 'GET',
+        data: rest,
+        contentType: 'application/json;charset=utf-8',
+        success: function (response) {
+            let res = {};
+            res = JSON.parse(response);
+            if (res.data)
+                survey.data = res.data;
 
-survey
-    .onComplete
+        },
+        error: function () {
+            alert("Возникла ошибка");
+        }
 
-    .add(function (sender, options) {
+    });
+}
+
+survey.onComplete.add(function (sender, options) {
         survey.mode = "show";
         survey.clear(false);
-        document
-            .querySelector('#CDHOres')
-            .textContent = "Result JSON:\n" + JSON.stringify(sender.data, null, 3);
+        document.querySelector('#CDHOres').textContent = "Result JSON:\n" + JSON.stringify(sender.data, null, 3);
+    var mySurvey = sender;
+    var surveyData = sender.data;
+    var xhr = new XMLHttpRequest();
+    xhr.open("PUT", "/api/kdh", true);
+    xhr.setRequestHeader("Content-Type", "application/json; charset=utf-8");
+    xhr.onload = xhr.onerror = function () {
+        if (xhr.status === 200)
+        {
+            options.showDataSavingSuccess("Успешный успех"); // you may pass a text parameter to show your own text
+            // Or you may clear all messages:
+            // options.showDataSavingClear();
+        } else
+        {
+            //Error
+            options.showDataSavingError("Бан по причине "+ xhr.status); // you may pass a text parameter to show your own text
+        }
+    };
+    xhr.send(JSON.stringify(sender.data));
     });
+
 
 
 survey.data = {

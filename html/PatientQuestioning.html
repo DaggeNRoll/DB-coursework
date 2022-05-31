@@ -179,8 +179,11 @@
                             type: 'GET',
                             data: JSON.stringify(myTable.row( { selected: true } ).data()),
                             contentType: 'application/json;charset=utf-8',
-                            success: function(){
+                            success: function(response){
+                                var rest = response;
+                                sessionStorage.setItem('visit', rest);
                                 window.location.href='../html/PatientQuestioning_2.html';
+
                             },
                             error: function(XMLHttpRequest, textStatus, errorThrown) {
                                 alert("Возникла ошибка");

@@ -23,6 +23,7 @@ var json1 = {
     "elements": [
 
         {
+            "isRequired": true,
             "type": "boolean",
             "name": "AgeBetween40_65",
             "title": "Возраст 40 – 65 лет:",
@@ -30,6 +31,7 @@ var json1 = {
             "labelFalse": "Нет",
         },
         {
+            "isRequired": true,
             "type": "boolean",
             "name": "LowAndModerateRiskOfCardiovascularComplications",
             "title": "Низкий и умеренный риск сердечно – сосудистых осложнений (0-\n" +
@@ -38,6 +40,7 @@ var json1 = {
             "labelFalse": "Нет",
         },
         {
+            "isRequired": true,
             "type": "boolean",
             "name": "ParticipationAgreement",
             "title": "Согласие на участие в исследовании:",
@@ -49,6 +52,51 @@ var json1 = {
 };
 
 window.survey2 = new Survey.Model(json1);
+let rest = sessionStorage.getItem('visit');
+
+function loadState(survey) {
+    $.ajax({
+        url:'/api/criteriaforinclusion',
+        type: 'GET',
+        data: rest,
+        contentType: 'application/json;charset=utf-8',
+        success:function (response)
+        {
+            let res={};
+            res=JSON.parse(response);
+            if (res.data)
+                survey.data = res.data;
+
+        },
+        error: function() {
+            alert("Возникла ошибка");
+        }
+
+    });
+    // Here should be the code to load the data from your database
+    //var storageSt = window.localStorage.getItem(storageName) || "";
+    /*if (storageSt)
+        res = JSON.parse(storageSt);*/
+
+    // Create the survey state for the demo. This line should be deleted in the real app. else
+    /*res = {
+        currentPageNo: 1,
+        data: {
+            "satisfaction": "4",
+            "Quality": {
+                "does what it claims": "1"
+            },
+            "recommend friends": "3",
+            "price to competitors": "More expensive",
+            "price": "correct",
+            "pricelimit": {
+                "mostamount": ""
+            }
+        }
+    };*/
+    // Set the loaded data into the survey.
+}
+
 
 survey2.onComplete.add(function (sender, options)
 {
@@ -58,7 +106,7 @@ survey2.onComplete.add(function (sender, options)
     var mySurvey = sender;
     var surveyData = sender.data;
     var xhr = new XMLHttpRequest();
-    xhr.open("POST", "/api/surveyresult/result", true);
+    xhr.open("PUT", "/api/criteriaforinclusion", true);
     xhr.setRequestHeader("Content-Type", "application/json; charset=utf-8");
     xhr.onload = xhr.onerror = function () {
         if (xhr.status === 200)
@@ -74,25 +122,25 @@ survey2.onComplete.add(function (sender, options)
     };
     xhr.send(JSON.stringify(sender.data));
 });
-function saveSurveyData(survey) {
+/*function saveSurveyData(survey) {
     var data = survey.data;
     data.pageNo = survey.currentPageNo;
     window.localStorage.setItem(storageName, JSON.stringify(data));
-}
-survey.onComplete.add(function (sender, options) {
+}*/
+/*survey.onComplete.add(function (sender, options) {
     saveSurveyData(sender);
-});
+});*/
 survey.sendResultOnPageNext = true;
 
 //var prevData = window.localStorage.getItem(storageName) || null;
 
-if (prevData) {
+/*if (prevData) {
     var data = JSON.parse(prevData);
     survey.data = data;
     if (data.pageNo) {
         survey.currentPageNo = data.pageNo;
     }
-}
+}*/
 
 /*survey2.data = {
     var data = JSON.parse('api/чётоттам');
