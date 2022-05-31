@@ -121,6 +121,7 @@ var json = {
 
 window.survey3 = new Survey.Model(json);
 
+let rest = sessionStorage.getItem('visit');
 function loadState(survey) {
     $.ajax({
         url: '/api/criteriaforexcerprion',
