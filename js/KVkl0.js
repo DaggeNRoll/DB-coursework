@@ -52,13 +52,12 @@ var json1 = {
 };
 
 window.survey2 = new Survey.Model(json1);
-let rest = sessionStorage.getItem('visit');
-
+let visitId = sessionStorage.getItem("visitId");
 function loadState(survey) {
     $.ajax({
-        url:'/api/criteriaforinclusion',
+        url:'/api/criteriaforinclusion/{visitId}',
         type: 'GET',
-        data: rest,
+        //data: rest,
         contentType: 'application/json;charset=utf-8',
         success:function (response)
         {
@@ -106,7 +105,7 @@ survey2.onComplete.add(function (sender, options)
     var mySurvey = sender;
     var surveyData = sender.data;
     var xhr = new XMLHttpRequest();
-    xhr.open("PUT", "/api/criteriaforinclusion", true);
+    xhr.open("PUT", "/api/criteriaforinclusion/{visitId}", true);
     xhr.setRequestHeader("Content-Type", "application/json; charset=utf-8");
     xhr.onload = xhr.onerror = function () {
         if (xhr.status === 200)

@@ -121,12 +121,11 @@ var json = {
 
 window.survey3 = new Survey.Model(json);
 
-let rest = sessionStorage.getItem('visit');
+let visitId = sessionStorage.getItem("visitId");
 function loadState(survey) {
     $.ajax({
-        url: '/api/criteriaforexcerprion',
+        url: '/api/criteriaforexception/{visitId}',
         type: 'GET',
-        data: rest,
         contentType: 'application/json;charset=utf-8',
         success: function (response) {
             let res = {};
@@ -148,7 +147,7 @@ survey3.onComplete.add(function (sender, options) {
     var mySurvey = sender;
     var surveyData = sender.data;
     var xhr = new XMLHttpRequest();
-    xhr.open("PUT", "/api/criteriaforexcerprion", true);
+    xhr.open("PUT", "/api/criteriaforexception/{visitId}", true);
     xhr.setRequestHeader("Content-Type", "application/json; charset=utf-8");
     xhr.onload = xhr.onerror = function () {
         if (xhr.status === 200)
