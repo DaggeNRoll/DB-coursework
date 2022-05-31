@@ -284,7 +284,7 @@ void Kdh(IApplicationBuilder appBuilder)
         switch (request.Method)
         {
             case "GET":
-                await GetKDH(response, request, connection);
+                await GetKDH(response, connection, Convert.ToInt32(path.Value?.Split("/")[1]));
                 break;
 
             case "PUT":
@@ -436,17 +436,13 @@ async Task DeletePatient(HttpResponse response, HttpRequest request, NpgsqlConne
     }
 }
 
-async Task GetKDH(HttpResponse response, HttpRequest request, NpgsqlConnection connection)
+async Task GetKDH(HttpResponse response, NpgsqlConnection connection, int visitId)
 {
     try
     {
-        var visit = await request.ReadFromJsonAsync<Visit>();
-
-        if (visit != null)
-        {
-            var query = "select * from \"kdh\" where \"VisitId\" = @Id";
+        var query = "select * from \"kdh\" where \"VisitId\" = @Id";
             var param = new DynamicParameters();
-            param.Add("@Id", visit.Id);
+            param.Add("@Id", visitId);
 
             var kdh = connection.Query<KDH>(query, param);
 
@@ -464,11 +460,6 @@ async Task GetKDH(HttpResponse response, HttpRequest request, NpgsqlConnection c
 
                 await response.WriteAsJsonAsync(kdh);
             }
-        }
-        else
-        {
-            throw new Exception("Где-то ошибка!");
-        }
     }
     catch (Exception)
     {
@@ -478,7 +469,7 @@ async Task GetKDH(HttpResponse response, HttpRequest request, NpgsqlConnection c
     }
 }
 
-async Task EditKdh(HttpResponse response, HttpRequest request, NpgsqlConnection connection, int id)
+async Task EditKdh(HttpResponse response, HttpRequest request, NpgsqlConnection connection, int visitId)
 {
     try
     {
@@ -489,9 +480,9 @@ async Task EditKdh(HttpResponse response, HttpRequest request, NpgsqlConnection 
             var query = "update \"kdh\" set \"Gender\" = @Gender, \"LengthOfMenopause\" = @Menopause, " +
                         "\"AggravatedHeredity\" = @Heredity, \"LiveWithFamily\" = @Live, " +
                         "\"FamilyStatus\" = @Family, \"Children\" = @Children, \"PhysicalActivity\" = @PhActivity, " +
-                        "\"WorkStatus\" = @Work, \"HasOccupationalHazards\" = @HasHazards, \"OccupationalHazards = " +
-                        "@Hazards\", \"Smoking\" = @Smoking, \"NumberOfCigarettes\" = @Cigarettes, " +
-                        "\"Dislipidemia\" = @Dislipidemia, \"Hypertension\" = @Hypertension where ";
+                        "\"WorkStatus\" = @Work, \"HasOccupationalHazards\" = @HasHazards, \"OccupationalHazards\" = " +
+                        "@Hazards, \"Smoking\" = @Smoking, \"NumberOfCigarettes\" = @Cigarettes, " +
+                        "\"Dislipidemia\" = @Dislipidemia, \"Hypertension\" = @Hypertension where \"VisitId\" = @VisitId;";
 
             var param = new
             {
@@ -500,7 +491,7 @@ async Task EditKdh(HttpResponse response, HttpRequest request, NpgsqlConnection 
                 PhActivity = kdh.PhysicalActivity,
                 Work = kdh.WorkStatus, HasHazards = kdh.HasOccupationalHazards, Hazards = kdh.OccupationalHazards,
                 Smoking = kdh.Smoking, Cigarettes = kdh.NumberOfCigarettes, Dislipidemia = kdh.Dislipidemia,
-                Hypertension = kdh.Hypertension
+                Hypertension = kdh.Hypertension, VisitId = visitId
             };
             connection.Query(query, param);
 
@@ -671,6 +662,10 @@ async Task GetCriteriaForInclusion(HttpResponse response, HttpRequest request, N
     }
 }
 
+async Task EditCriteriaForInclusion(HttpResponse response, HttpRequest request, NpgsqlConnection connection, int id)
+{
+    
+}
 
 public class Person
 {

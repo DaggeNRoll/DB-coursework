@@ -233,13 +233,13 @@ alert(visitId);
 window.survey = new Survey.Model(json);
 function loadState(survey) {
     $.ajax({
-        url: '/api/kdh/{visitId}',
+        url: '/api/kdh/'+visitId,
         type: 'GET',
         //data: rest,
         contentType: 'application/json;charset=utf-8',
         success: function (response) {
             let res = {};
-            res = JSON.parse(response);
+            res = JSON.parse(JSON.stringify(response));
             if (res.data)
                 survey.data = res.data;
 
@@ -258,7 +258,7 @@ survey.onComplete.add(function (sender, options) {
     var mySurvey = sender;
     var surveyData = sender.data;
     var xhr = new XMLHttpRequest();
-    xhr.open("PUT", "/api/kdh/{visitId}", true);
+    xhr.open("PUT", "/api/kdh/" + visitId, true);
     xhr.setRequestHeader("Content-Type", "application/json; charset=utf-8");
     xhr.onload = xhr.onerror = function () {
         if (xhr.status === 200)
@@ -280,5 +280,5 @@ survey.onComplete.add(function (sender, options) {
 survey.data = {
 
 };
-
+loadState(survey);
 $("#CDHOsurv").Survey({model: survey, onValueChanged: surveyValueChanged});
