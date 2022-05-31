@@ -150,9 +150,9 @@
             "sPaginationType": "full_numbers",
 
             ajax: {
-                //url : '/api/patients',
-                url : '../js/tsconfig.json',
-                //type: 'GET',
+                url : '/api/patients',
+                //url : '../js/tsconfig.json',
+                type: 'GET',
                 //data: rowdata,
                 //success: success,
                 //error: error,
@@ -176,7 +176,7 @@
                         $.ajax({
                             url:'/api/visit/0',
                             //url:'js/tsconfig.json',
-                            type: 'GET',
+                            type: 'POST',
                             data: JSON.stringify(myTable.row( { selected: true } ).data()),
                             contentType: 'application/json;charset=utf-8',
                             success: function(response){
