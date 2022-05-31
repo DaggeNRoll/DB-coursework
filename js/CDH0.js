@@ -66,11 +66,21 @@ var json = {
             "inputType": "text"
         },
         {"isRequired": true,
-            "type": "boolean",
+            "type": "radiogroup",
             "name": "AggravatedHeredity",
             "title": "Отягощенная наследственность:",
-            "labelTrue": "Да",
-            "labelFalse": "Нет",
+            "choices":
+                [
+                    {
+                        "value": 0,
+                        "text": "Нет"
+                    },
+                    {
+                        "value": 1,
+                        "text": "Да"
+                    }
+                ],
+            "colCount": 2
         },
         {"isRequired": true,
             "type": "boolean",
