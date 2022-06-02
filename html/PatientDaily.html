@@ -83,25 +83,25 @@
 
         var columnDefs = [
             {
-                data: "Date",
+                data: "date",
                 title: "Дата",
                 datetimepicker: { timepicker: false, format : "Y-m-d"}
                 //type: "readonly"
             },
             {
-                data: "HeartRateMorning",
+                data: "heartRateMorning",
                 title: "Пульс(утро)"
             },
             {
-                data: "BloodPressureMorning",
+                data: "bloodPressureMorning",
                 title: "АД(утро)"
             },
             {
-                data: "HeartRateEvening",
+                data: "heartRateEvening",
                 title: "Пульс(вечер)"
             },
             {
-                data: "BloodPressureEvening",
+                data: "bloodPressureEvening",
                 title: "АД(вечер)"
             }
 
@@ -157,7 +157,7 @@
             ],
             onAddRow: function(datatable, rowdata, success, error) {
                 $.ajax({
-                    url: '/patient',
+                    url: '/patient/'+Loginpat,
                     type: 'PUT',
                     data: JSON.stringify(rowdata),
                     contentType: 'application/json;charset=utf-8',
@@ -167,7 +167,7 @@
             },
             onDeleteRow: function(datatable, rowdata, success, error) {
                 $.ajax({
-                    url: '/patient',
+                    url: '/patient/'+Loginpat,
                     type: 'DELETE',
                     data: JSON.stringify(rowdata),
                     contentType: 'application/json;charset=utf-8',
@@ -177,7 +177,7 @@
             },
             onEditRow: function(datatable, rowdata, success, error) {
                 $.ajax({
-                    url: '/patient',
+                    url: '/patient/'+Loginpat,
                     type: 'PUT',
                     data: JSON.stringify(rowdata),
                     contentType: 'application/json;charset=utf-8',
