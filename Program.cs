@@ -161,6 +161,90 @@ void Measurements(IApplicationBuilder appBuilder)
                     await response.WriteAsJsonAsync("Произошла ошибка");
                 }
                 break;
+            
+            case "PUT":
+                try
+                {
+                    var login = path.Value?.Split("/")[1];
+                    
+                    var measurement = await request.ReadFromJsonAsync<Measurement>();
+
+                    if (measurement is null)
+                    {
+                        throw new Exception("Некорректные данные");
+                    }
+
+                    var querySelect = "select * from \"measurement\" where \"Date\" = @Date";
+                    var queryUser = "select \"UserId\" from \"authorization\" where \"Login\" = @Login";
+                    
+                    var param = new DynamicParameters();
+                    param.Add("@Date", measurement.Date);
+                    param.Add("@BloodPressureMorning", measurement.BloodPressureMorning);
+                    param.Add("@BloodPressureEvening", measurement.BloodPressureEvening);
+                    param.Add("@HeartRateMorning", measurement.HeartRateMorning);
+                    param.Add("@HeartRateEvening", measurement.HeartRateEvening);
+                    param.Add("@Login", login);
+                    var userId = connection.Query<int>(queryUser, param);
+                    param.Add("@UserId", userId.ToList()[0]);
+
+                    var measurementDb = connection.Query<Measurement>(querySelect, param);
+
+                    if (measurementDb.Any())
+                    {
+                        var queryUpdate =
+                            "update \"measurement\" set \"BloodPressureMorning\" = @BloodPressureMorning, " +
+                            "\"BloodPressureEvening\" = @BloodPressureEvening, \"HeartRateMorning\" = @HeartRateMorning, " +
+                            "\"HeartRateEvening\" = @HeartRateEvening where \"Date\" = @Date";
+
+                        connection.Query(queryUpdate, param);
+                        
+                        await response.WriteAsJsonAsync(measurement);
+                    }
+                    else
+                    {
+                        var queryInsert = "insert into \"measurement\"  (\"Date\", \"BloodPressureMorning\", " +
+                                          "\"BloodPressureEvening\", \"HeartRateMorning\", \"HeartRateEvening\", " +
+                                          "\"UserId\") " +
+                                          "values (@Date, @BloodPressureMorning, @BloodPressureEvening, " +
+                                          "@HeartRateMorning, @HeartRateEvening, @UserId)";
+                        connection.Query(queryInsert, param);
+                        await response.WriteAsJsonAsync(measurement);
+                    }
+
+                }
+                catch (Exception)
+                {
+                    response.StatusCode = 400;
+                    await response.WriteAsJsonAsync(new { message = "Произошла ошибка" });
+                }
+                
+                
+                break;
+            case "DELETE":
+                try
+                {
+                    var measurements = await request.ReadFromJsonAsync<List<Measurement>>();
+                    
+
+                    if (!measurements.Any())
+                    {
+                        throw new Exception("Некорректные данные");
+                    }
+
+                    var measurement = measurements[0];
+
+                    var queryDelete = "delete from \"measurement\" where \"Date\" = @Date";
+                    var param = new DynamicParameters();
+                    param.Add("@Date", measurement.Date);
+
+                    connection.Query(queryDelete, param);
+                }
+                catch (Exception)
+                {
+                    response.StatusCode = 400;
+                    await response.WriteAsJsonAsync(new { message = "Произошла ошибка" });
+                }
+                break;
         }
     });
 }
@@ -241,7 +325,7 @@ void Login(IApplicationBuilder appBuilder)
     });
 }
 
-[Authorize]
+
 void Visit(IApplicationBuilder appBuilder)
 {
     appBuilder.Run(async (context) =>
@@ -278,7 +362,7 @@ void Visit(IApplicationBuilder appBuilder)
     });
 }
 
-[Authorize]
+
 void CritForExc(IApplicationBuilder appBuilder)
 {
     appBuilder.Run(async (context) =>
@@ -308,7 +392,7 @@ void CritForExc(IApplicationBuilder appBuilder)
     });
 }
 
-[Authorize]
+
 void CritForInc(IApplicationBuilder appBuilder)
 {
     appBuilder.Run(async (context) =>
@@ -337,7 +421,6 @@ void CritForInc(IApplicationBuilder appBuilder)
         }
     });
 }
-
 
 void Patients(IApplicationBuilder appBuilder)
 {
@@ -388,7 +471,7 @@ void Patients(IApplicationBuilder appBuilder)
     });
 }
 
-[Authorize]
+
 void Kdh(IApplicationBuilder appBuilder)
 {
     appBuilder.Run(async (context) =>
@@ -901,7 +984,7 @@ public class Measurement
 {
     public int Id { get; set; }
     public int UserId { get; set; }
-    public DateTime? Date { get; set; }
+    public string? Date { get; set; }
     public string? BloodPressureMorning { get; set; }
     public string? BloodPressureEvening { get; set; }
     public int? HeartRateMorning { get; set; }
