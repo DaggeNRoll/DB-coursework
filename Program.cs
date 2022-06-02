@@ -3,102 +3,70 @@ using System.Linq.Expressions;
 using System.Text.RegularExpressions;
 using Dapper;
 using Npgsql;
-
-
-List<Person> users = new List<Person>
-{
-    new() { Id = Guid.NewGuid().ToString(), Name = "Van", Age = 69 },
-    new() { Id = Guid.NewGuid().ToString(), Name = "Billy", Age = 38 },
-    new() { Id = Guid.NewGuid().ToString(), Name = "Ivan", Age = 25 }
-};
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using Azure;
+using Microsoft.AspNetCore.Authorization.Infrastructure;
+using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/login";
+        options.AccessDeniedPath = "/acessdenied";
+    });
+builder.Services.AddAuthorization();
+
 var app = builder.Build();
+app.UseAuthentication();
+app.UseAuthorization();
+
 using var connection =
     new NpgsqlConnection(builder.Configuration.GetConnectionString("KursachDb")); //могут быть проблемы с лямбдами
 
-app.Map("/api", appBuilder =>
+app.Map("/login", Login);
+
+app.MapGet("/accessdenied", async (context) =>
+{
+    context.Response.StatusCode = 403;
+    await context.Response.WriteAsync("Access Denied");
+});
+
+
+
+
+app.MapPost("/accessdenied", async (HttpContext context) =>
+{
+    await context.Response.SendFileAsync("html/rejected.html");
+});
+
+app.Map("/patient", Measurements);
+
+    
+   
+
+
+
+app.Map("/api", [Authorize(Roles = "doctor")](appBuilder) =>
 {
     appBuilder.Map("/patients", Patients);
     appBuilder.Map("/kdh", Kdh);
     appBuilder.Map("/criteriaforinclusion", CritForInc);
     appBuilder.Map("/criteriaforexception", CritForExc);
     appBuilder.Map("/visit", Visit);
+    appBuilder.Map("/home", HomePage);
+
     /*appBuilder.Map("/html", Html);
     appBuilder.Map("/images", Images);
     appBuilder.Map("/css", Css);
     appBuilder.Map("/js", Js);
     appBuilder.Map("/data", Data);*/
 });
-
-
-/*app.Run(async (context) =>
-{
-    var response = context.Response;
-    var request = context.Request;
-    var path = request.Path;
-
-    string expressionForGuid = @"^/api/users/\w{8}-\w{4}-\w{4}-\w{4}-\w{12}$";
-
-    var pathValues = path.Value?.Split("/"); 
-
-    //await WriteToDB("User ID=postgres;Password=Vhhvze05042002;Host=localhost;Port=5432;Database=Kursach;", response, request);
-    
-    //using var connection = new NpgsqlConnection(builder.Configuration.GetConnectionString("KursachDb"));
-
-    //await GetCriteriaForInclusion(response, connection, 3, 0);
-    
-
-    if(path=="/api/users" && request.Method == "GET")
-    {
-        await GetAllPeople(response);
-    }
-    else if(Regex.IsMatch(path, expressionForGuid) && request.Method == "GET")
-    {
-        string? id = path.Value?.Split("/")[3];
-        await GetPerson(id, response, request);
-    }
-    else if(path=="/api/users" && request.Method == "POST")
-    {
-        await CreatePerson(response, request);
-    }
-    else if(path=="/api/users" && request.Method == "Put")
-    {
-        await UpdatePerson(response,request);
-    }
-    else if (path == "/api/patients" && request.Method == "GET")
-    {
-        await GetAllPatients(response, connection);
-    }
-    else if (Regex.IsMatch(path, expressionForGuid) && request.Method == "DELETE")
-    {
-        string? id = path.Value?.Split("/")[3];
-        await DeletePerson(id,response,request);
-    }
-    else switch (pathValues?.Length)
-    {
-       
-        case 3 when path.Value?.Split("/")[1] == "images":
-            await SendImage(response, path.Value?.Split("/")[2]);
-            break;
-        case 3 when path.Value?.Split("/")[1] == "css":
-            await SendCss(response, path.Value?.Split("/")[2]);
-            break;
-        case 3 when path.Value?.Split("/")[1]=="html":
-            await SendHtml(response, path.Value?.Split("/")[2]);
-            break;
-        case 3 when path.Value?.Split("/")[1]=="js":
-            await SendJs(response, path.Value?.Split("/")[2]);
-            break;
-        case 3 when path.Value?.Split("/")[1]=="data":
-            await SendData(response, path.Value?.Split("/")[2]);
-            break;
-        default:
-            response.ContentType="text/html; charset=utf-8";
-            await response.SendFileAsync("html/PatientsList-2.html");
-            break;
-    }
-});*/
 
 app.Run(async (context) =>
 {
@@ -124,14 +92,156 @@ app.Run(async (context) =>
             await SendData(response, path.Value?.Split("/")[2]);
             break;
         default:
-            response.ContentType = "text/html; charset=utf-8";
-            await response.SendFileAsync("html/PatientsList-2.html");
+            context.Response.ContentType = "text/html; charset=utf-8";
+            await context.Response.SendFileAsync("html/signin.html");
             break;
     }
 });
 
+app.MapGet("/logout", async (HttpContext context) =>
+{
+    await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+    return "Данные удалены";
+});
+
 app.Run();
 
+void HomePage(IApplicationBuilder appBuilder)
+{
+    appBuilder.Run(async (context) =>
+    {
+        context.Response.ContentType = "text/html; charset=utf-8";
+        await context.Response.SendFileAsync("/html/PatientList-2.html");
+    });
+}
+
+void Measurements(IApplicationBuilder appBuilder)
+{
+    appBuilder.Run(async (context) =>
+    {
+        var response = context.Response;
+        var request = context.Request;
+        var path = request.Path;
+
+        switch (request.Method)
+        {
+            case "POST":
+                try
+                {
+                    var login = path.Value?.Split("/")[1];
+
+                    if (login == null)
+                    {
+                        throw new Exception("Некорректный логин");
+                    }
+
+                    var queryUser = "select \"UserId\" from \"authorization\" where \"Login\" = @Login";
+
+                    var param = new DynamicParameters();
+                    param.Add("@Login", login);
+
+                    var userId = connection.Query<int>(queryUser, param);
+
+                    if (!userId.Any())
+                    {
+                        throw new Exception("Пользователь не найден");
+                    }
+
+                    var queryMeasurements = "select * from \"measurement\" where \"UserId\" = @UserId";
+                    param.Add("UserId", userId.ToList()[0]);
+
+                    var measurements = connection.Query<Measurement>(queryMeasurements, param);
+
+                    await response.WriteAsJsonAsync(measurements);
+
+                }
+                catch (Exception)
+                {
+                    response.StatusCode = 400;
+                    await response.WriteAsJsonAsync("Произошла ошибка");
+                }
+                break;
+        }
+    });
+}
+
+void Login(IApplicationBuilder appBuilder)
+{
+    appBuilder.Run(async (context) =>
+    {
+        var request = context.Request;
+    var response = context.Response;
+    var path = request.Path;
+
+    switch (request.Method)
+    {
+        case "GET":
+            context.Response.ContentType = "text/html; charset=utf-8";
+            await context.Response.SendFileAsync("html/signin.html");
+            break;
+        case "POST":
+            var loginData = await request.ReadFromJsonAsync<LoginData>();
+            if (loginData is null)
+            {
+                await response.WriteAsJsonAsync(new{group="Некорректные данные"});
+                return;
+            }
+
+            if (loginData.Login == null || loginData.Password == null)
+            {
+                await response.WriteAsJsonAsync(new { group = "Логин или пароль не указан" });
+                return;
+            }
+
+            try
+            {
+                var query = "select * from \"authorization\" where \"Login\" = @Login";
+
+                var param = new DynamicParameters();
+                param.Add("@Login", loginData.Login);
+
+                var userData = connection.Query<Authorization>(query, param);
+
+                if (!userData.Any())
+                {
+                    await response.WriteAsJsonAsync(new { group = "Пользователь не найден!" });
+                    return;
+                }
+
+                var password = HashPassword(loginData.Password, userData.ToList()[0].Salt);
+
+                if (password != userData.ToList()[0].Password)
+                {
+                    await response.WriteAsJsonAsync(new { group = "Неверный пароль!" });
+                    return;;
+                }
+
+                query = "select \"Group\" from \"user\" where \"Id\" = @Id";
+                param.Add("@Id", userData.ToList()[0].UserId);
+
+                var group = connection.Query<string>(query, param);
+
+                var claims = new List<Claim>
+                {
+                    new Claim(ClaimsIdentity.DefaultNameClaimType, loginData.Login),
+                    new Claim(ClaimsIdentity.DefaultRoleClaimType, group.ToList()[0])
+                };
+
+                var claimsIdentity = new ClaimsIdentity(claims, "Cookies");
+                var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+                await context.SignInAsync(claimsPrincipal);
+                await response.WriteAsJsonAsync(new { group = $"{group.ToList()[0]}" });
+            }
+            catch (Exception)
+            {
+                Results.BadRequest("Что-то пошло не по плану");
+            }
+            break;
+    }
+    });
+}
+
+[Authorize]
 void Visit(IApplicationBuilder appBuilder)
 {
     appBuilder.Run(async (context) =>
@@ -168,6 +278,7 @@ void Visit(IApplicationBuilder appBuilder)
     });
 }
 
+[Authorize]
 void CritForExc(IApplicationBuilder appBuilder)
 {
     appBuilder.Run(async (context) =>
@@ -179,11 +290,12 @@ void CritForExc(IApplicationBuilder appBuilder)
         switch (request.Method)
         {
             case "GET":
-                await GetCriteriaForException(response, request, connection);
+                await GetCriteriaForException(response, connection, Convert.ToInt32(path.Value?.Split("/")[1]));
                 break;
 
             case "PUT":
-
+                await EditCriteriaForException(response, request, connection,
+                    Convert.ToInt32(path.Value?.Split("/")[1]));
                 break;
 
             case "DELETE":
@@ -196,6 +308,7 @@ void CritForExc(IApplicationBuilder appBuilder)
     });
 }
 
+[Authorize]
 void CritForInc(IApplicationBuilder appBuilder)
 {
     appBuilder.Run(async (context) =>
@@ -207,11 +320,12 @@ void CritForInc(IApplicationBuilder appBuilder)
         switch (request.Method)
         {
             case "GET":
-                await GetCriteriaForInclusion(response, request, connection);
+                await GetCriteriaForInclusion(response, connection, Convert.ToInt32(path.Value?.Split("/")[1]));
                 break;
 
             case "PUT":
-
+                await EditCriteriaForInclusion(response, request, connection,
+                    Convert.ToInt32(path.Value?.Split("/")[1]));
                 break;
 
             case "DELETE":
@@ -223,6 +337,7 @@ void CritForInc(IApplicationBuilder appBuilder)
         }
     });
 }
+
 
 void Patients(IApplicationBuilder appBuilder)
 {
@@ -273,6 +388,7 @@ void Patients(IApplicationBuilder appBuilder)
     });
 }
 
+[Authorize]
 void Kdh(IApplicationBuilder appBuilder)
 {
     appBuilder.Run(async (context) =>
@@ -284,7 +400,7 @@ void Kdh(IApplicationBuilder appBuilder)
         switch (request.Method)
         {
             case "GET":
-                await GetKDH(response, connection, Convert.ToInt32(path.Value?.Split("/")[1]));
+                await GetKdh(response, connection, Convert.ToInt32(path.Value?.Split("/")[1]));
                 break;
 
             case "PUT":
@@ -323,6 +439,7 @@ async Task SendJs(HttpResponse response, string? jsFilePath)
 {
     await response.SendFileAsync("js/" + jsFilePath);
 }
+
 
 async Task GetAllPatients(HttpResponse response, NpgsqlConnection connection)
 {
@@ -413,7 +530,7 @@ async Task DeletePatient(HttpResponse response, HttpRequest request, NpgsqlConne
     try
     {
         var patients = await request.ReadFromJsonAsync<List<User>>();
-        
+
         if (patients.Any())
         {
             var patient = patients[0];
@@ -427,79 +544,6 @@ async Task DeletePatient(HttpResponse response, HttpRequest request, NpgsqlConne
         else
         {
             throw new Exception("Неверные данные!");
-        }
-    }
-    catch (Exception)
-    {
-        response.StatusCode = 400;
-        await response.WriteAsJsonAsync(new { message = "Некорректные данные!" });
-    }
-}
-
-async Task GetKDH(HttpResponse response, NpgsqlConnection connection, int visitId)
-{
-    try
-    {
-        var query = "select * from \"kdh\" where \"VisitId\" = @Id";
-            var param = new DynamicParameters();
-            param.Add("@Id", visitId);
-
-            var kdh = connection.Query<KDH>(query, param);
-
-            if (kdh.Any())
-            {
-                await response.WriteAsJsonAsync(kdh);
-            }
-            else
-            {
-                query = "insert into \"kdh\" (\"VisitId\") values (@Id)";
-                connection.Query(query, param);
-
-                query = "select * from \"kdh\" where \"VisitId\" = @Id";
-                kdh = connection.Query<KDH>(query, param);
-
-                await response.WriteAsJsonAsync(kdh);
-            }
-    }
-    catch (Exception)
-    {
-        response.StatusCode = 400;
-        await response.WriteAsJsonAsync(new
-            { message = "Где-то снова ошибка. Можно уже закончить наконец этот курсач?" });
-    }
-}
-
-async Task EditKdh(HttpResponse response, HttpRequest request, NpgsqlConnection connection, int visitId)
-{
-    try
-    {
-        var kdh = await request.ReadFromJsonAsync<KDH>();
-
-        if (kdh != null)
-        {
-            var query = "update \"kdh\" set \"Gender\" = @Gender, \"LengthOfMenopause\" = @Menopause, " +
-                        "\"AggravatedHeredity\" = @Heredity, \"LiveWithFamily\" = @Live, " +
-                        "\"FamilyStatus\" = @Family, \"Children\" = @Children, \"PhysicalActivity\" = @PhActivity, " +
-                        "\"WorkStatus\" = @Work, \"HasOccupationalHazards\" = @HasHazards, \"OccupationalHazards\" = " +
-                        "@Hazards, \"Smoking\" = @Smoking, \"NumberOfCigarettes\" = @Cigarettes, " +
-                        "\"Dislipidemia\" = @Dislipidemia, \"Hypertension\" = @Hypertension where \"VisitId\" = @VisitId;";
-
-            var param = new
-            {
-                Gender = kdh.Gender, Menopause = kdh.LengthOfMenopause, Heredity = kdh.AggravatedHeredity,
-                Live = kdh.LiveWithFamily, Family = kdh.FamilyStatus, Children = kdh.Children,
-                PhActivity = kdh.PhysicalActivity,
-                Work = kdh.WorkStatus, HasHazards = kdh.HasOccupationalHazards, Hazards = kdh.OccupationalHazards,
-                Smoking = kdh.Smoking, Cigarettes = kdh.NumberOfCigarettes, Dislipidemia = kdh.Dislipidemia,
-                Hypertension = kdh.Hypertension, VisitId = visitId
-            };
-            connection.Query(query, param);
-
-            await response.WriteAsJsonAsync(kdh);
-        }
-        else
-        {
-            throw new Exception("Некорректные данные");
         }
     }
     catch (Exception)
@@ -580,36 +624,100 @@ async Task DeleteVisit(HttpResponse response, HttpRequest request, NpgsqlConnect
     }
 }
 
-async Task GetCriteriaForException(HttpResponse response, HttpRequest request, NpgsqlConnection connection)
+async Task GetKdh(HttpResponse response, NpgsqlConnection connection, int visitId)
 {
     try
     {
-        var visit = await request.ReadFromJsonAsync<Visit>();
+        var query = "select * from \"kdh\" where \"VisitId\" = @Id";
+        var param = new DynamicParameters();
+        param.Add("@Id", visitId);
 
-        if (visit != null)
+        var kdh = connection.Query<KDH>(query, param);
+
+        if (kdh.Any())
         {
-            var querySelect = "select * from \"criteriaForException\" where \"VisitId\" = @Id";
-            var param = new DynamicParameters();
-            param.Add("@Id", visit.Id);
-
-            var criteriaForException = connection.Query<CriteriaForException>(querySelect, param);
-
-            if (criteriaForException.Any())
-            {
-                await response.WriteAsJsonAsync(criteriaForException);
-            }
-            else
-            {
-                var queryInsert = "insert into \"criteriaForException\" (\"VisitId\" values (@Id))";
-                connection.Query(queryInsert, param);
-
-                criteriaForException = connection.Query<CriteriaForException>(querySelect, param);
-                await response.WriteAsJsonAsync(criteriaForException);
-            }
+            await response.WriteAsJsonAsync(kdh);
         }
         else
         {
-            throw new Exception("Что-то пошло не по плану");
+            query = "insert into \"kdh\" (\"VisitId\") values (@Id)";
+            connection.Query(query, param);
+
+            query = "select * from \"kdh\" where \"VisitId\" = @Id";
+            kdh = connection.Query<KDH>(query, param);
+
+            await response.WriteAsJsonAsync(kdh);
+        }
+    }
+    catch (Exception)
+    {
+        response.StatusCode = 400;
+        await response.WriteAsJsonAsync(new
+            { message = "Где-то снова ошибка. Можно уже закончить наконец этот курсач?" });
+    }
+}
+
+async Task EditKdh(HttpResponse response, HttpRequest request, NpgsqlConnection connection, int visitId)
+{
+    try
+    {
+        var kdh = await request.ReadFromJsonAsync<KDH>();
+
+        if (kdh != null)
+        {
+            var query = "update \"kdh\" set \"Gender\" = @Gender, \"LengthOfMenopause\" = @Menopause, " +
+                        "\"AggravatedHeredity\" = @Heredity, \"LiveWithFamily\" = @Live, " +
+                        "\"FamilyStatus\" = @Family, \"Children\" = @Children, \"PhysicalActivity\" = @PhActivity, " +
+                        "\"WorkStatus\" = @Work, \"HasOccupationalHazards\" = @HasHazards, \"OccupationalHazards\" = " +
+                        "@Hazards, \"Smoking\" = @Smoking, \"NumberOfCigarettes\" = @Cigarettes, " +
+                        "\"Dislipidemia\" = @Dislipidemia, \"Hypertension\" = @Hypertension where \"VisitId\" = @VisitId;";
+
+            var param = new
+            {
+                Gender = kdh.Gender, Menopause = kdh.LengthOfMenopause, Heredity = kdh.AggravatedHeredity,
+                Live = kdh.LiveWithFamily, Family = kdh.FamilyStatus, Children = kdh.Children,
+                PhActivity = kdh.PhysicalActivity,
+                Work = kdh.WorkStatus, HasHazards = kdh.HasOccupationalHazards, Hazards = kdh.OccupationalHazards,
+                Smoking = kdh.Smoking, Cigarettes = kdh.NumberOfCigarettes, Dislipidemia = kdh.Dislipidemia,
+                Hypertension = kdh.Hypertension, VisitId = visitId
+            };
+            connection.Query(query, param);
+
+            await response.WriteAsJsonAsync(kdh);
+        }
+        else
+        {
+            throw new Exception("Некорректные данные");
+        }
+    }
+    catch (Exception)
+    {
+        response.StatusCode = 400;
+        await response.WriteAsJsonAsync(new { message = "Некорректные данные!" });
+    }
+}
+
+async Task GetCriteriaForException(HttpResponse response, NpgsqlConnection connection, int visitId)
+{
+    try
+    {
+        var qurySelect = "select * from \"criteriaForException\" where \"VisitId\" = @VisitId;";
+        var param = new DynamicParameters();
+        param.Add("@VisitId", visitId);
+
+        var criteriaForException = connection.Query<CriteriaForException>(qurySelect, param);
+
+        if (criteriaForException.Any())
+        {
+            await response.WriteAsJsonAsync(criteriaForException);
+        }
+        else
+        {
+            var queryInsert = "insert into \"criteriaForException\" (\"VisitId\") values (@VisitId);";
+            connection.Query(queryInsert, param);
+
+            criteriaForException = connection.Query<CriteriaForException>(qurySelect, param);
+            await response.WriteAsJsonAsync(criteriaForException);
         }
     }
     catch (Exception)
@@ -619,36 +727,74 @@ async Task GetCriteriaForException(HttpResponse response, HttpRequest request, N
     }
 }
 
-async Task GetCriteriaForInclusion(HttpResponse response, HttpRequest request, NpgsqlConnection connection)
+async Task EditCriteriaForException(HttpResponse response, HttpRequest request, NpgsqlConnection connection,
+    int visitId)
 {
     try
     {
-        var visit = await request.ReadFromJsonAsync<Visit>();
+        var criteriaForException = await request.ReadFromJsonAsync<CriteriaForException>();
 
-        if (visit != null)
+        if (criteriaForException != null)
         {
-            var querySelect = "select * from \"criteriaForInclusion\" where \"VisitId\" = @Id";
-            var param = new DynamicParameters();
-            param.Add("@Id", visit.Id);
+            var query =
+                "update \"criteriaForException\" set \"SymptomaticAG\" = @Ag, \"Сardiomyopathy\" = @Cardiomyopathy, " +
+                "\"HeartValvePathology\" = @HeartValve, \"HeartRateAndConductancePathology\" = @HeartRate, " +
+                "\"EndocrineDisease\" = @Endocrine, \"ChronicLiverRenalFailure\" = @Liver, " +
+                "\"OncoHemoDisease\" = @OncoDisease, \"CollagenOutbreak\" = @Collagen, \"MorbideObesity\" = @Obesity, " +
+                "\"InflammatoryBowelDisease\" = @Bowel, \"OPP\" = @Opp, " +
+                "\"OperationAntibioticAntiInflamatoryTherapy\" = @Operation, \"PsychotropicDrug\" = @Drug, " +
+                "\"RASBlockers\" = @Rasb where \"VisitId\" = @VisitId;";
 
-            var criteriaForInclusion = connection.Query<CriteriaForInclusion>(querySelect, param);
-
-            if (criteriaForInclusion.Any())
+            var param = new
             {
-                await response.WriteAsJsonAsync(criteriaForInclusion);
-            }
-            else
-            {
-                var queryInsert = "insert into \"criteriaForInclusion\" (\"VisitId\") values (@Id)";
-                connection.Query(queryInsert, param);
+                Ag = criteriaForException.SymptomaticAG, Cardiomyopathy = criteriaForException.Cardiomyopathy,
+                HeartValve = criteriaForException.HeartValvePathology,
+                HeartRate = criteriaForException.HeartRateAndConductancePathology,
+                Endocrine = criteriaForException.EndocrineDisease,
+                Liver = criteriaForException.ChronicLiverRenalFailure,
+                OncoDisease = criteriaForException.OncoHemoDisease, Collagen = criteriaForException.CollagenOutbreak,
+                Obesity = criteriaForException.MorbideObesity, Bowel = criteriaForException.InflammatoryBowelDisease,
+                OPP = criteriaForException.OOP,
+                Operation = criteriaForException.OperationAntibioticAntiInflamatoryTherapy,
+                Drug = criteriaForException.PsychotropicDrug, Rasb = criteriaForException.RASBlockers, VisitId = visitId
+            };
+            connection.Query(query, param);
 
-                criteriaForInclusion = connection.Query<CriteriaForInclusion>(querySelect, param);
-                await response.WriteAsJsonAsync(criteriaForInclusion);
-            }
+            await response.WriteAsJsonAsync(criteriaForException);
         }
         else
         {
-            throw new Exception("Ошибка! Опять вкалывать!");
+            throw new Exception("Некорректные данные");
+        }
+    }
+    catch (Exception)
+    {
+        response.StatusCode = 400;
+        await response.WriteAsJsonAsync(new { message = "Некорректные данные!" });
+    }
+}
+
+async Task GetCriteriaForInclusion(HttpResponse response, NpgsqlConnection connection, int visitId)
+{
+    try
+    {
+        var qurySelect = "select * from \"criteriaForInclusion\" where \"VisitId\" = @VisitId;";
+        var param = new DynamicParameters();
+        param.Add("@VisitId", visitId);
+
+        var criteriaForInclusion = connection.Query<CriteriaForInclusion>(qurySelect, param);
+
+        if (criteriaForInclusion.Any())
+        {
+            await response.WriteAsJsonAsync(criteriaForInclusion);
+        }
+        else
+        {
+            var queryInsert = "insert into \"criteriaForInclusion\" (\"VisitId\") values (@VisitId);";
+            connection.Query(queryInsert, param);
+
+            criteriaForInclusion = connection.Query<CriteriaForInclusion>(qurySelect, param);
+            await response.WriteAsJsonAsync(criteriaForInclusion);
         }
     }
     catch (Exception)
@@ -662,16 +808,62 @@ async Task GetCriteriaForInclusion(HttpResponse response, HttpRequest request, N
     }
 }
 
-async Task EditCriteriaForInclusion(HttpResponse response, HttpRequest request, NpgsqlConnection connection, int id)
+async Task EditCriteriaForInclusion(HttpResponse response, HttpRequest request, NpgsqlConnection connection,
+    int visitId)
 {
-    
+    try
+    {
+        var criteriaForInclusion = await request.ReadFromJsonAsync<CriteriaForInclusion>();
+
+        if (criteriaForInclusion != null)
+        {
+            var query = "update \"criteriaForInclusion\" set \"AgeBetween40_65\" = @Age, " +
+                        "\"LowAndModerateRiskOfCardiovascularComplications\" = @Risk, \"ParticipationAgreement\" = @Agreement," +
+                        "\"Hypertension\" = @Hypertension, \"SRBOrDOrA\" = @Srb where \"VisitId\" = @VisitId";
+
+            var param = new
+            {
+                Age = criteriaForInclusion.AgeBetween40_65,
+                Risk = criteriaForInclusion.LowAndModerateRiskOfCardiovascularComplications,
+                Agreement = criteriaForInclusion.ParticipationAgreement,
+                Hypertension = criteriaForInclusion.Hypertension,
+                Srb = criteriaForInclusion.SRBOrDOrA, VisitId = visitId
+            };
+            connection.Query(query, param);
+
+            await response.WriteAsJsonAsync(criteriaForInclusion);
+        }
+        else
+        {
+            throw new Exception("Некорректные данные!");
+        }
+    }
+    catch (Exception)
+    {
+        response.StatusCode = 400;
+        await response.WriteAsJsonAsync(new { message = "Что-то пошло не по плану" });
+    }
 }
 
-public class Person
+string HashPassword(string password, string salt)
 {
-    public string Id { get; set; } = "";
-    public string Name { get; set; } = "";
-    public int Age { get; set; }
+    return Convert.ToBase64String(KeyDerivation.Pbkdf2(
+        password: password,
+        salt: Convert.FromBase64String(salt),
+        prf: KeyDerivationPrf.HMACSHA256,
+        iterationCount: 100000,
+        numBytesRequested: 256 / 8));
+}
+
+string CreateSalt()
+{
+    byte[] salt = new byte[128 / 8];
+    using (var rngCsp = new RNGCryptoServiceProvider())
+    {
+        rngCsp.GetNonZeroBytes(salt);
+    }
+
+    return Convert.ToBase64String(salt);
 }
 
 public class User
@@ -705,12 +897,30 @@ public class Visit
     }
 }
 
+public class Measurement
+{
+    public int Id { get; set; }
+    public int UserId { get; set; }
+    public DateTime? Date { get; set; }
+    public string? BloodPressureMorning { get; set; }
+    public string? BloodPressureEvening { get; set; }
+    public int? HeartRateMorning { get; set; }
+    public int? HeartRateEvening { get; set; }
+}
+
 public class Authorization
 {
     public int Id { get; set; }
     public int UserId { get; set; }
     public string Password { get; set; } = "";
     public string Login { get; set; } = "";
+    public string Salt { get; set; } = "";
+}
+
+public class LoginData
+{
+    public string? Login { get; set; }
+    public string? Password { get; set; }
 }
 
 public class KDH

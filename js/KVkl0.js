@@ -50,7 +50,7 @@ var json1 = {
 
     ]
 };
-let visitId = sessionStorage.getItem("visitId");
+//let visitId = sessionStorage.getItem("visitId");
 window.survey2 = new Survey.Model(json1);
 function loadState(survey) {
     $.ajax({

@@ -236,11 +236,16 @@ function loadState(survey) {
         contentType: 'application/json;charset=utf-8',
         success: function (response) {
             //let res = {};
-            let res = JSON.parse(JSON.stringify(response));
-            if (res.data)
+         
+            let res = response[0];
+            
+            if (res)
             {
                 survey.clear();
-                survey.data = res.data;
+                survey.data = res;
+                alert(survey.data);
+               
+                
             }
 
         },
@@ -277,8 +282,8 @@ survey.onComplete.add(function (sender, options) {
 
 
 
-survey.data = {
 
-};
 loadState(survey);
+
 $("#CDHOsurv").Survey({model: survey, onValueChanged: surveyValueChanged});
+
