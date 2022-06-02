@@ -60,30 +60,8 @@
             <div class="tab-content" id="nav-tabContent">
                 <div class="tab-pane fade show active" style="padding: 10px; " id="nav-home" role="tabpanel" aria-labelledby="nav-PList-tab">
                     <div class="shadow card bg-dark">
-
-                        <!-- <table id="example" class="table table-striped row-border hover order-column " style="width:100%">
-                             <thead>
-                             <tr>
-                                 <th>Номер пациента</th>
-                                 <th>ФИО</th>
-                                 <th>Номер телефона</th>
-                                 <th>Возраст</th>
-                                 <th>Номер АК</th>
-                                 <th>Дата добавления</th>
-                             </tr>
-                             </thead>
-                             <tfoot>
-                             <tr>
-                                 <th>Номер пациента</th>
-                                 <th>ФИО</th>
-                                 <th>Номер телефона</th>
-                                 <th>Возраст</th>
-                                 <th>Номер АК</th>
-                                 <th>Дата добавления</th>
-                             </tr>
-                             </tfoot>
-                         </table>-->
-                        <table cellpadding="0" cellspacing="0" border="0" class="dataTable table table-striped" id="patients">
+                        <table
+                                cellpadding="0" cellspacing="0" border="0" class="dataTable table table-striped" id="patient">
 
                         </table>
 
@@ -100,31 +78,32 @@
     </div>
 
 </div><script>
+    let Loginpat = sessionStorage.getItem("Loginpat");
     jQuery.datetimepicker.setLocale('ru');
     $(document).ready(function() {
 
 
         var columnDefs = [
             {
-                data: "date",
+                data: "Date",
                 title: "Дата",
-                datetimepicker: { timepicker: false, format : "Y/m/d"}
+                datetimepicker: { timepicker: false, format : "Y-m-d"}
                 //type: "readonly"
             },
             {
-                data: "name",
+                data: "HeartRateMorning",
                 title: "Пульс(утро)"
             },
             {
-                data: "phoneNumber",
+                data: "BloodPressureMorning",
                 title: "АД(утро)"
             },
             {
-                data: "age",
+                data: "HeartRateEvening",
                 title: "Пульс(вечер)"
             },
             {
-                data: "ac",
+                data: "BloodPressureEvening",
                 title: "АД(вечер)"
             }
 
@@ -134,15 +113,17 @@
         //var url_ws_mock_get = 'https://luca-vercelli.github.io/DataTable-AltEditor/example/03_ajax_objects/mock_svc_load.json';
         // var url_ws_mock_ok = 'https://luca-vercelli.github.io/DataTable-AltEditor/example/03_ajax_objects/mock_svc_ok.json';
 
-        var myTable = $('#patients').DataTable({
+        var myTable = $('#patient').DataTable({
             "sPaginationType": "full_numbers",
 
             ajax: {
-                url : '/api/patients',
+                url : '/patient',
                 type: 'GET',
-                //data: rowdata,
+                DataType: 'json',
+                data: '{"login": "' + Loginpat+'"}',
                 //success: success,
                 //error: error,
+                contentType: 'application/json;charset=utf-8',
                 // our data is an array of objects, in the root node instead of /data node, so we need 'dataSrc' parameter
                 dataSrc : ''
             },
@@ -178,7 +159,7 @@
             ],
             onAddRow: function(datatable, rowdata, success, error) {
                 $.ajax({
-                    url: '/api/patients',
+                    url: '/patient',
                     type: 'PUT',
                     data: JSON.stringify(rowdata),
                     contentType: 'application/json;charset=utf-8',
@@ -188,7 +169,7 @@
             },
             onDeleteRow: function(datatable, rowdata, success, error) {
                 $.ajax({
-                    url: '/api/patients',
+                    url: '/patient',
                     type: 'DELETE',
                     data: JSON.stringify(rowdata),
                     contentType: 'application/json;charset=utf-8',
@@ -198,7 +179,7 @@
             },
             onEditRow: function(datatable, rowdata, success, error) {
                 $.ajax({
-                    url: '/api/patients',
+                    url: '/patient',
                     type: 'POST',
                     data: JSON.stringify(rowdata),
                     contentType: 'application/json;charset=utf-8',
