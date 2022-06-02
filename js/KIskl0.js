@@ -9,7 +9,7 @@ var surveyValueChanged = function (sender, options) {
     }
 };
 
-var json = {
+var json3 = {
     "title": "Критерии исключения",
     "description": "(Для включения пациента в исследование все ответы должны быть \"Нет\")",
     triggers: [
@@ -119,7 +119,7 @@ var json = {
     ]
 };
 
-window.survey3 = new Survey.Model(json);
+window.survey3 = new Survey.Model(json3);
 
 let visitId = sessionStorage.getItem("visitId");
 function loadState(survey) {
