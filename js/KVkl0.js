@@ -50,12 +50,12 @@ var json1 = {
 
     ]
 };
-
-window.survey2 = new Survey.Model(json1);
 let visitId = sessionStorage.getItem("visitId");
+window.survey2 = new Survey.Model(json);
+
 function loadState(survey) {
     $.ajax({
-        url:'/api/criteriaforinclusion/{visitId}',
+        url:'/api/criteriaforinclusion/'+visitId,
         type: 'GET',
         //data: rest,
         contentType: 'application/json;charset=utf-8',
