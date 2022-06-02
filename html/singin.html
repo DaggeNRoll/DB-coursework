@@ -89,8 +89,19 @@
         //data: $("#SingIn").serialize(),
         data: '{"Login": "' + Login + '", "Password" : "' + Password + '"}',
         contentType: 'application/json;charset=utf-8',
-        success : function(result) {
-          console.log(result);
+        success : function(response) {
+          var rest = response;
+          var group = JSON.parse(JSON.stringify(rest)).group;
+
+            switch(group) {
+              case "doctor":
+                window.location.href='../html/PatientsList-2.html';
+                break;
+              case "patient":
+                window.location.href='../html/PatientDaily.html';
+                break;
+            }
+
         },
         error: function(xhr, resp, text) {
           console.log(xhr, resp, text);

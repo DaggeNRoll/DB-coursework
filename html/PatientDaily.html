@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Пациент</title>
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.1.3/css/bootstrap.min.css"/>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs5/jq-3.6.0/dt-1.12.1/b-2.2.3/date-1.1.2/r-2.3.0/sc-2.0.6/sp-2.0.1/sl-1.4.0/datatables.min.css"/>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/v/bs5/jq-3.6.0/dt-1.12.1/b-2.2.3/date-1.1.2/r-2.3.0/sc-2.0.6/sp-2.0.1/sl-1.4.0/datatables.min.js"></script>
+    <link href="../css/style2.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <script src="https://unpkg.com/survey-jquery@1.9.29/survey.jquery.min.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/survey-jquery"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.9/jquery.datetimepicker.css" integrity="sha512-bYPO5jmStZ9WI2602V2zaivdAnbAhtfzmxnEGh9RwtlI00I9s8ulGe4oBa5XxiC6tCITJH/QG70jswBhbLkxPw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.9/jquery.datetimepicker.full.min.js" integrity="sha512-hDFt+089A+EmzZS6n/urree+gmentY36d9flHQ5ChfiRjEJJKFSsl1HqyEOS5qz7jjbMZ0JU4u/x1qe211534g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="../js/dataTables.altEditor.free.js" ></script>
+
+</head>
+
+<body screen_capture_injected="true" class="d-flex flex-column min-vh-100 bg-dark ">
+<header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
+    <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3" href="#"><i><img width="70" height="70" src = "../images/logo.png" alt="My Happy SVG"/></i>НМИЦ Кардиологии</a>
+    <button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="navbar-nav">
+        <div class="nav-item text-nowrap">
+            <a class="nav-link px-3" href="#">Выход</a>
+        </div>
+    </div>
+</header>
+<div class="container-fluid">
+    <div class="row">
+        <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse" style="height: 100%">
+            <div class="position-sticky pt-3">
+                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                    <span>Навигация</span>
+                    </a>
+                </h6>
+                <hr>
+                <ul class="nav nav-pills flex-column mb-auto">
+                    <li class="nav-item">
+                        <a href="../html/PatientDaily.html" class="nav-link active" >Ежедневные показатели</a>
+                    </li>
+                </ul>
+                <hr>
+
+                <ul class="nav nav-pills flex-column mb-auto">
+                    <li class="nav-item ">
+
+                    </li>
+                </ul>
+                <nav class="nav nav-tabs flex-column mb-auto" id="nav-tab" role="tablist">
+                    <a class="nav-link active" id="nav-PList-tab" data-bs-toggle="tab" href="#nav-home" role="tab" aria-controls="nav-home" aria-selected="true">Список</a>
+                    <a class="nav-link" id="nav-profile-tab" data-bs-toggle="tab" href="#nav-profile" role="tab" aria-controls="nav-profile" aria-selected="false">Profile</a>
+                </nav>
+            </div>
+        </nav>
+        <main  class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="tab-content" id="nav-tabContent">
+                <div class="tab-pane fade show active" style="padding: 10px; " id="nav-home" role="tabpanel" aria-labelledby="nav-PList-tab">
+                    <div class="shadow card bg-dark">
+
+                        <!-- <table id="example" class="table table-striped row-border hover order-column " style="width:100%">
+                             <thead>
+                             <tr>
+                                 <th>Номер пациента</th>
+                                 <th>ФИО</th>
+                                 <th>Номер телефона</th>
+                                 <th>Возраст</th>
+                                 <th>Номер АК</th>
+                                 <th>Дата добавления</th>
+                             </tr>
+                             </thead>
+                             <tfoot>
+                             <tr>
+                                 <th>Номер пациента</th>
+                                 <th>ФИО</th>
+                                 <th>Номер телефона</th>
+                                 <th>Возраст</th>
+                                 <th>Номер АК</th>
+                                 <th>Дата добавления</th>
+                             </tr>
+                             </tfoot>
+                         </table>-->
+                        <table cellpadding="0" cellspacing="0" border="0" class="dataTable table table-striped" id="patients">
+
+                        </table>
+
+                    </div>
+                </div>
+                <div class="tab-pane fade show" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab">
+                    <img  src = "https://sun1-83.userapi.com/s/v1/if2/K8bz2Q1Py5fUUPJb8EqzQu_LiSRNU0MueUTKY6P6OGEEWb9y-mRfJjWkegsZwTzP3xc21DI-lQ1lR8yY7rq9nsEQ.jpg?size=520x520&quality=95&type=album" alt="My Happy SVG"/>
+                </div>
+            </div>
+
+
+
+        </main>
+    </div>
+
+</div><script>
+    jQuery.datetimepicker.setLocale('ru');
+    $(document).ready(function() {
+
+
+        var columnDefs = [
+            {
+                data: "date",
+                title: "Дата",
+                datetimepicker: { timepicker: false, format : "Y/m/d"}
+                //type: "readonly"
+            },
+            {
+                data: "name",
+                title: "Пульс(утро)"
+            },
+            {
+                data: "phoneNumber",
+                title: "АД(утро)"
+            },
+            {
+                data: "age",
+                title: "Пульс(вечер)"
+            },
+            {
+                data: "ac",
+                title: "АД(вечер)"
+            }
+
+        ];
+
+
+        //var url_ws_mock_get = 'https://luca-vercelli.github.io/DataTable-AltEditor/example/03_ajax_objects/mock_svc_load.json';
+        // var url_ws_mock_ok = 'https://luca-vercelli.github.io/DataTable-AltEditor/example/03_ajax_objects/mock_svc_ok.json';
+
+        var myTable = $('#patients').DataTable({
+            "sPaginationType": "full_numbers",
+
+            ajax: {
+                url : '/api/patients',
+                type: 'GET',
+                //data: rowdata,
+                //success: success,
+                //error: error,
+                // our data is an array of objects, in the root node instead of /data node, so we need 'dataSrc' parameter
+                dataSrc : ''
+            },
+            columns: columnDefs,
+            //dom: "<'row  mb-3'<'col-sm-12 col-md-6 d-flex align-items-center justify-content-start'f><'col-sm-12 col-md-6 d-flex align-items-center justify-content-end'B>>" + "<'row'<'col-sm-12'tr>>" + "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+            dom: '<\'d-flex align-items-center margin-right-15 justify-content-left\'B>ftp',        // Needs button container
+            select: 'single',
+            responsive: true,
+            altEditor: true,     // Enable altEditor
+            buttons: [
+                {
+                    text: 'Добавить запись ',
+                    name: 'add',        // do not change name
+                    className: "btn btn-primary"
+                },
+                {
+                    extend: 'selected', // Bind to Selected row
+                    text: 'Редактировать запись',
+                    name: 'edit' ,
+                    className: "btn btn"// do not change name
+                },
+                {
+                    extend: 'selected', // Bind to Selected row
+                    text: 'Удалить запись',
+                    className: "btn btn-danger",
+                    name: 'delete'      // do not change name
+                },
+                {
+                    text: 'Обновить',
+                    name: 'refresh'  ,    // do not change name
+                    className: "btn btn-info"
+                }
+            ],
+            onAddRow: function(datatable, rowdata, success, error) {
+                $.ajax({
+                    url: '/api/patients',
+                    type: 'PUT',
+                    data: JSON.stringify(rowdata),
+                    contentType: 'application/json;charset=utf-8',
+                    success: success,
+                    error: error
+                });
+            },
+            onDeleteRow: function(datatable, rowdata, success, error) {
+                $.ajax({
+                    url: '/api/patients',
+                    type: 'DELETE',
+                    data: JSON.stringify(rowdata),
+                    contentType: 'application/json;charset=utf-8',
+                    success: success,
+                    error: error
+                });
+            },
+            onEditRow: function(datatable, rowdata, success, error) {
+                $.ajax({
+                    url: '/api/patients',
+                    type: 'POST',
+                    data: JSON.stringify(rowdata),
+                    contentType: 'application/json;charset=utf-8',
+                    success: success,
+                    error: error
+                });
+            },
+            language: {
+                altEditorUrl: '../../russian.json',
+                url: '//cdn.datatables.net/plug-ins/1.12.0/i18n/ru.json'
+            }
+        });
+
+    });
+</script>
+<!-- JavaScript Bundle with Popper -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css" type="text/javascript"></script>
+</body>
+</html>
+
