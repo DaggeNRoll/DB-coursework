@@ -52,7 +52,6 @@ var json1 = {
 };
 let visitId = sessionStorage.getItem("visitId");
 window.survey2 = new Survey.Model(json1);
-
 function loadState(survey) {
     $.ajax({
         url:'/api/criteriaforinclusion/'+visitId,
@@ -61,11 +60,12 @@ function loadState(survey) {
         contentType: 'application/json;charset=utf-8',
         success:function (response)
         {
-            let res={};
-            res=JSON.parse(response);
-            if (res.data)
+           // let res={};
+            let res=JSON.parse(response);
+            if (res.data) {
+                survey.clear();
                 survey.data = res.data;
-
+            }
         },
         error: function() {
             alert("Возникла ошибка");
@@ -105,7 +105,7 @@ survey2.onComplete.add(function (sender, options)
     var mySurvey = sender;
     var surveyData = sender.data;
     var xhr = new XMLHttpRequest();
-    xhr.open("PUT", "/api/criteriaforinclusion" + visitId, true);
+    xhr.open("PUT", "/api/criteriaforinclusion/" + visitId, true);
     xhr.setRequestHeader("Content-Type", "application/json; charset=utf-8");
     xhr.onload = xhr.onerror = function () {
         if (xhr.status === 200)

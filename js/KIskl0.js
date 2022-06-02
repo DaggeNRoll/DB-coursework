@@ -120,16 +120,16 @@ var json3 = {
 };
 
 window.survey3 = new Survey.Model(json3);
-
 let visitId = sessionStorage.getItem("visitId");
 function loadState(survey) {
     $.ajax({
         url: '/api/criteriaforexception/'+visitId,
         type: 'GET',
+        dataType: 'json',
         contentType: 'application/json;charset=utf-8',
         success: function (response) {
-            let res = {};
-            res = JSON.parse(response);
+            //let res = {};
+           let res = JSON.parse(response);
             if (res.data)
                 survey.data = res.data;
 

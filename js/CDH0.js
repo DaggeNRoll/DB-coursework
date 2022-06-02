@@ -225,23 +225,23 @@ var json = {
     ]
 };
 let visitId = sessionStorage.getItem("visitId");
-
 alert(visitId);
-
-
-
 window.survey = new Survey.Model(json);
 function loadState(survey) {
     $.ajax({
         url: '/api/kdh/'+visitId,
         type: 'GET',
+        dataType: 'json',
         //data: rest,
         contentType: 'application/json;charset=utf-8',
         success: function (response) {
-            let res = {};
-            res = JSON.parse(JSON.stringify(response));
+            //let res = {};
+            let res = JSON.parse(JSON.stringify(response));
             if (res.data)
+            {
+                survey.clear();
                 survey.data = res.data;
+            }
 
         },
         error: function () {
