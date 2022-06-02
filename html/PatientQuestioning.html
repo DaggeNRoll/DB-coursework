@@ -26,7 +26,7 @@
     </button>
     <div class="navbar-nav">
         <div class="nav-item text-nowrap">
-            <a class="nav-link px-3" href="#">Sign out</a>
+            <a class="nav-link px-3" href="#">Выход</a>
         </div>
     </div>
 </header>
@@ -78,8 +78,8 @@
 
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
             <div class="tab-content" id="nav-tabContent">
-                <div class="tab-pane fade show active" id="nav-Patient" role="tabpanel" aria-labelledby="nav-CDH0-tab">
-                    <hr>
+                <div class="tab-pane fade show active" style="padding: 10px; " id="nav-Patient" role="tabpanel" aria-labelledby="nav-CDH0-tab">
+
 
                     <div>
                         <table cellpadding="0" cellspacing="0" border="0" class="dataTable table table-striped" id="patients"></table>
@@ -160,15 +160,15 @@
                 dataSrc : ''
             },
             columns: columnDefs,
-            dom: 'Bfrtip',        // Needs button container
+            dom: 'Bfrtp',        // Needs button container
             select: 'single',
             responsive: true,
             altEditor: true,     // Enable altEditor
             buttons: [
                 {
                     extend: 'selected',
-                    text: 'Get selected data',
-                    className: 'btn-primary',
+                    text: 'Перейти к редактированию анкеты',
+                    className: 'btn-info',
                     action: async function () {
                         //var count = myTable.row( { selected: true } ).data().id;
                         //alert( JSON.stringify(myTable.row( { selected: true } ).data()));

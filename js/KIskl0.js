@@ -147,7 +147,7 @@ survey3.onComplete.add(function (sender, options) {
     var mySurvey = sender;
     var surveyData = sender.data;
     var xhr = new XMLHttpRequest();
-    xhr.open("PUT", "/api/criteriaforexception/{visitId}", true);
+    xhr.open("PUT", "/api/criteriaforexception" + visitId, true);
     xhr.setRequestHeader("Content-Type", "application/json; charset=utf-8");
     xhr.onload = xhr.onerror = function () {
         if (xhr.status === 200)
@@ -168,5 +168,5 @@ survey3.onComplete.add(function (sender, options) {
 survey.data = {
 
 };
-
+loadState(survey);
 $("#KIskl0surv").Survey({model: survey3, onValueChanged: surveyValueChanged});

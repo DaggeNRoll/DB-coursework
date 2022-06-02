@@ -15,11 +15,7 @@ body {
 
 
 }
-.nav-tabs .nav-link.active {
-  color: #ffffff;
-  background-color: #bc4123;
-  border-color: #bc4123;
-}
+
 
 .nav-tabs .nav-link {
   margin-bottom: -1px;
@@ -82,27 +78,26 @@ body {
 .checkbox{
   color: #fff;
 }
-.nav-link{
+.nav-pills .nav-link.active, .nav-pills .show>.nav-link {
   color: #fff;
-  background-color: #bc4123;
-  border-color: #bc4123;
+  background-color: #1ab394;
 }
-.btn-primary {
+.nav-tabs .nav-item.show .nav-link, .nav-tabs .nav-link.active {
+  color: #ffffff;
+  background-color: #1ab394;!important;
+  border-color: #1aad8f #1cbd9c #1ecca9;!important;
+}
+.nav-link:focus, .nav-link:hover {
+  color: #1ab394;!important;
+}
+.btn-primary{
+  background-color: #1ab394;!important;
+  border-color: #1ab394;!important;
+}
+.btn-primary:hover, .btn-primary:focus, .btn-primary:active, .btn-primary.active, .open>.dropdown-toggle.btn-primary {
   color: #fff;
-  background-color: #bc4123;
-  border-color: #bc4123;
-
-}
-.btn-primary:hover,
-
-.btn-primary:focus{
-  background-color: #e76343;
-  border-color: #a3a7b6;
-}
-
-.btn-primary:visited{
-  background-color: #bc4123;
-  border-color: #a3a7b6;
+  background-color: #1ecca9;!important;
+  border-color: #1ecca9;!important;
 }
 .form-signin .checkbox {
   font-weight: 400;

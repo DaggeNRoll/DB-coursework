@@ -105,7 +105,7 @@ survey2.onComplete.add(function (sender, options)
     var mySurvey = sender;
     var surveyData = sender.data;
     var xhr = new XMLHttpRequest();
-    xhr.open("PUT", "/api/criteriaforinclusion/{visitId}", true);
+    xhr.open("PUT", "/api/criteriaforinclusion" + visitId, true);
     xhr.setRequestHeader("Content-Type", "application/json; charset=utf-8");
     xhr.onload = xhr.onerror = function () {
         if (xhr.status === 200)
@@ -144,5 +144,5 @@ survey.sendResultOnPageNext = true;
 /*survey2.data = {
     var data = JSON.parse('api/чётоттам');
 };*/
-
+loadState(survey);
 $("#KVkl0surv").Survey({model: survey2, onValueChanged: surveyValueChanged});

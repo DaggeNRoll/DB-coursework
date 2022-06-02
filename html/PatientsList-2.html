@@ -18,7 +18,7 @@
 
 </head>
 
-<body screen_capture_injected="true" class="d-flex flex-column min-vh-100 bg-dark">
+<body screen_capture_injected="true" class="d-flex flex-column min-vh-100 bg-dark ">
 <header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
     <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3" href="#"><i><img width="70" height="70" src = "../images/logo.png" alt="My Happy SVG"/></i>НМИЦ Кардиологии</a>
     <button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
@@ -26,7 +26,7 @@
     </button>
     <div class="navbar-nav">
         <div class="nav-item text-nowrap">
-            <a class="nav-link px-3" href="#">Sign out</a>
+            <a class="nav-link px-3" href="#">Выход</a>
         </div>
     </div>
 </header>
@@ -82,9 +82,9 @@
 
         <main  class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
      <div class="tab-content" id="nav-tabContent">
-        <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-PList-tab">
+        <div class="tab-pane fade show active" style="padding: 10px; " id="nav-home" role="tabpanel" aria-labelledby="nav-PList-tab">
          <div class="shadow card bg-dark">
-             <hr>
+
             <!-- <table id="example" class="table table-striped row-border hover order-column " style="width:100%">
                  <thead>
                  <tr>
@@ -321,10 +321,8 @@
                 dataSrc : ''
             },
             columns: columnDefs,
-           //dom: "<'row  mb-3'<'col-sm-12 col-md-6 d-flex align-items-center justify-content-start'f><'col-sm-12 col-md-6 d-flex align-items-center justify-content-end'B>>" +
-               //"<'row'<'col-sm-12'tr>>" +
-               //"<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
-            dom: 'Bfrtip',        // Needs button container
+            //dom: "<'row  mb-3'<'col-sm-12 col-md-6 d-flex align-items-center justify-content-start'f><'col-sm-12 col-md-6 d-flex align-items-center justify-content-end'B>>" + "<'row'<'col-sm-12'tr>>" + "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+            dom: '<\'d-flex align-items-center margin-right-15 justify-content-left\'B>ftp',        // Needs button container
             select: 'single',
             responsive: true,
             altEditor: true,     // Enable altEditor
@@ -337,16 +335,19 @@
                 {
                     extend: 'selected', // Bind to Selected row
                     text: 'Редактировать запись',
-                    name: 'edit'        // do not change name
+                    name: 'edit' ,
+                    className: "btn btn"// do not change name
                 },
                 {
                     extend: 'selected', // Bind to Selected row
                     text: 'Удалить запись',
+                    className: "btn btn-danger",
                     name: 'delete'      // do not change name
                 },
                 {
                     text: 'Обновить',
-                    name: 'refresh'      // do not change name
+                    name: 'refresh'  ,    // do not change name
+                    className: "btn btn-info"
                 }
             ],
             onAddRow: function(datatable, rowdata, success, error) {
