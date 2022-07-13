@@ -1,6 +1,4 @@
-using System.Data;
-using System.Linq.Expressions;
-using System.Text.RegularExpressions;
+
 using Dapper;
 using Npgsql;
 using Microsoft.AspNetCore.Authentication;
@@ -13,6 +11,7 @@ using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 
 var builder = WebApplication.CreateBuilder(args);
+
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
@@ -27,32 +26,26 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 using var connection =
-    new NpgsqlConnection(builder.Configuration.GetConnectionString("KursachDb")); //могут быть проблемы с лямбдами
+    new NpgsqlConnection(builder.Configuration.GetConnectionString("KursachDb"));
+
+var sessionClaims = new List<Claim>();
 
 app.Map("/login", Login);
 
-app.MapGet("/accessdenied", async (context) =>
+app.MapGet("/accessdenied", async context =>
 {
     context.Response.StatusCode = 403;
     await context.Response.WriteAsync("Access Denied");
 });
 
 
-
-
-app.MapPost("/accessdenied", async (HttpContext context) =>
-{
-    await context.Response.SendFileAsync("html/rejected.html");
-});
+app.MapPost("/accessdenied",
+    async (HttpContext context) => { await context.Response.SendFileAsync("html/rejected.html"); });
 
 app.Map("/patient", Measurements);
 
-    
-   
 
-
-
-app.Map("/api", [Authorize(Roles = "doctor")](appBuilder) =>
+app.Map("/api", appBuilder =>
 {
     appBuilder.Map("/patients", Patients);
     appBuilder.Map("/kdh", Kdh);
@@ -60,15 +53,9 @@ app.Map("/api", [Authorize(Roles = "doctor")](appBuilder) =>
     appBuilder.Map("/criteriaforexception", CritForExc);
     appBuilder.Map("/visit", Visit);
     appBuilder.Map("/home", HomePage);
-
-    /*appBuilder.Map("/html", Html);
-    appBuilder.Map("/images", Images);
-    appBuilder.Map("/css", Css);
-    appBuilder.Map("/js", Js);
-    appBuilder.Map("/data", Data);*/
 });
 
-app.Run(async (context) =>
+app.Run(async context =>
 {
     var response = context.Response;
     var request = context.Request;
@@ -101,6 +88,7 @@ app.Run(async (context) =>
 app.MapGet("/logout", async (HttpContext context) =>
 {
     await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+    sessionClaims.Clear();
     return "Данные удалены";
 });
 
@@ -108,7 +96,7 @@ app.Run();
 
 void HomePage(IApplicationBuilder appBuilder)
 {
-    appBuilder.Run(async (context) =>
+    appBuilder.Run(async context =>
     {
         context.Response.ContentType = "text/html; charset=utf-8";
         await context.Response.SendFileAsync("/html/PatientList-2.html");
@@ -117,7 +105,7 @@ void HomePage(IApplicationBuilder appBuilder)
 
 void Measurements(IApplicationBuilder appBuilder)
 {
-    appBuilder.Run(async (context) =>
+    appBuilder.Run(async context =>
     {
         var response = context.Response;
         var request = context.Request;
@@ -153,20 +141,20 @@ void Measurements(IApplicationBuilder appBuilder)
                     var measurements = connection.Query<Measurement>(queryMeasurements, param);
 
                     await response.WriteAsJsonAsync(measurements);
-
                 }
                 catch (Exception)
                 {
                     response.StatusCode = 400;
                     await response.WriteAsJsonAsync("Произошла ошибка");
                 }
+
                 break;
-            
+
             case "PUT":
                 try
                 {
                     var login = path.Value?.Split("/")[1];
-                    
+
                     var measurement = await request.ReadFromJsonAsync<Measurement>();
 
                     if (measurement is null)
@@ -176,7 +164,7 @@ void Measurements(IApplicationBuilder appBuilder)
 
                     var querySelect = "select * from \"measurement\" where \"Date\" = @Date";
                     var queryUser = "select \"UserId\" from \"authorization\" where \"Login\" = @Login";
-                    
+
                     var param = new DynamicParameters();
                     param.Add("@Date", measurement.Date);
                     param.Add("@BloodPressureMorning", measurement.BloodPressureMorning);
@@ -197,7 +185,7 @@ void Measurements(IApplicationBuilder appBuilder)
                             "\"HeartRateEvening\" = @HeartRateEvening where \"Date\" = @Date";
 
                         connection.Query(queryUpdate, param);
-                        
+
                         await response.WriteAsJsonAsync(measurement);
                     }
                     else
@@ -210,21 +198,20 @@ void Measurements(IApplicationBuilder appBuilder)
                         connection.Query(queryInsert, param);
                         await response.WriteAsJsonAsync(measurement);
                     }
-
                 }
                 catch (Exception)
                 {
                     response.StatusCode = 400;
                     await response.WriteAsJsonAsync(new { message = "Произошла ошибка" });
                 }
-                
-                
+
+
                 break;
             case "DELETE":
                 try
                 {
                     var measurements = await request.ReadFromJsonAsync<List<Measurement>>();
-                    
+
 
                     if (!measurements.Any())
                     {
@@ -244,6 +231,7 @@ void Measurements(IApplicationBuilder appBuilder)
                     response.StatusCode = 400;
                     await response.WriteAsJsonAsync(new { message = "Произошла ошибка" });
                 }
+
                 break;
         }
     });
@@ -251,84 +239,82 @@ void Measurements(IApplicationBuilder appBuilder)
 
 void Login(IApplicationBuilder appBuilder)
 {
-    appBuilder.Run(async (context) =>
+    appBuilder.Run(async context =>
     {
         var request = context.Request;
-    var response = context.Response;
-    var path = request.Path;
+        var response = context.Response;
+        var path = request.Path;
 
-    switch (request.Method)
-    {
-        case "GET":
-            context.Response.ContentType = "text/html; charset=utf-8";
-            await context.Response.SendFileAsync("html/signin.html");
-            break;
-        case "POST":
-            var loginData = await request.ReadFromJsonAsync<LoginData>();
-            if (loginData is null)
-            {
-                await response.WriteAsJsonAsync(new{group="Некорректные данные"});
-                return;
-            }
-
-            if (loginData.Login == null || loginData.Password == null)
-            {
-                await response.WriteAsJsonAsync(new { group = "Логин или пароль не указан" });
-                return;
-            }
-
-            try
-            {
-                var query = "select * from \"authorization\" where \"Login\" = @Login";
-
-                var param = new DynamicParameters();
-                param.Add("@Login", loginData.Login);
-
-                var userData = connection.Query<Authorization>(query, param);
-
-                if (!userData.Any())
+        switch (request.Method)
+        {
+            case "GET":
+                context.Response.ContentType = "text/html; charset=utf-8";
+                await context.Response.SendFileAsync("html/signin.html");
+                break;
+            case "POST":
+                var loginData = await request.ReadFromJsonAsync<LoginData>();
+                if (loginData is null)
                 {
-                    await response.WriteAsJsonAsync(new { group = "Пользователь не найден!" });
+                    await response.WriteAsJsonAsync(new { group = "Некорректные данные" });
                     return;
                 }
 
-                var password = HashPassword(loginData.Password, userData.ToList()[0].Salt);
-
-                if (password != userData.ToList()[0].Password)
+                if (loginData.Login == null || loginData.Password == null)
                 {
-                    await response.WriteAsJsonAsync(new { group = "Неверный пароль!" });
-                    return;;
+                    await response.WriteAsJsonAsync(new { group = "Логин или пароль не указан" });
+                    return;
                 }
 
-                query = "select \"Group\" from \"user\" where \"Id\" = @Id";
-                param.Add("@Id", userData.ToList()[0].UserId);
-
-                var group = connection.Query<string>(query, param);
-
-                var claims = new List<Claim>
+                try
                 {
-                    new Claim(ClaimsIdentity.DefaultNameClaimType, loginData.Login),
-                    new Claim(ClaimsIdentity.DefaultRoleClaimType, group.ToList()[0])
-                };
+                    var query = "select * from \"authorization\" where \"Login\" = @Login";
 
-                var claimsIdentity = new ClaimsIdentity(claims, "Cookies");
-                var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
-                await context.SignInAsync(claimsPrincipal);
-                await response.WriteAsJsonAsync(new { group = $"{group.ToList()[0]}" });
-            }
-            catch (Exception)
-            {
-                Results.BadRequest("Что-то пошло не по плану");
-            }
-            break;
-    }
+                    var param = new DynamicParameters();
+                    param.Add("@Login", loginData.Login);
+
+                    var userData = connection.Query<Authorization>(query, param);
+
+                    if (!userData.Any())
+                    {
+                        await response.WriteAsJsonAsync(new { group = "Пользователь не найден!" });
+                        return;
+                    }
+
+                    var password = HashPassword(loginData.Password, userData.ToList()[0].Salt);
+
+                    if (password != userData.ToList()[0].Password)
+                    {
+                        await response.WriteAsJsonAsync(new { group = "Неверный пароль!" });
+                        return;
+                    }
+
+                    query = "select \"Group\" from \"user\" where \"Id\" = @Id";
+                    param.Add("@Id", userData.ToList()[0].UserId);
+
+                    var group = connection.Query<string>(query, param);
+                    
+                    sessionClaims.Add(new Claim(ClaimsIdentity.DefaultNameClaimType, loginData.Login));
+                    sessionClaims.Add(new Claim(ClaimsIdentity.DefaultRoleClaimType, group.ToList()[0]));
+
+                    var claimsIdentity = new ClaimsIdentity(sessionClaims, "Cookies");
+                    var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+                    await context.SignInAsync(claimsPrincipal);
+                    await response.WriteAsJsonAsync(new { group = $"{group.ToList()[0]}" });
+                }
+                catch (Exception)
+                {
+                    Results.BadRequest("Произошла ошибка");
+                }
+
+                break;
+        }
     });
 }
 
 
 void Visit(IApplicationBuilder appBuilder)
 {
-    appBuilder.Run(async (context) =>
+    appBuilder.Run(async context =>
     {
         var response = context.Response;
         var request = context.Request;
@@ -365,7 +351,7 @@ void Visit(IApplicationBuilder appBuilder)
 
 void CritForExc(IApplicationBuilder appBuilder)
 {
-    appBuilder.Run(async (context) =>
+    appBuilder.Run(async context =>
     {
         var response = context.Response;
         var request = context.Request;
@@ -395,7 +381,7 @@ void CritForExc(IApplicationBuilder appBuilder)
 
 void CritForInc(IApplicationBuilder appBuilder)
 {
-    appBuilder.Run(async (context) =>
+    appBuilder.Run(async context =>
     {
         var response = context.Response;
         var request = context.Request;
@@ -413,7 +399,6 @@ void CritForInc(IApplicationBuilder appBuilder)
                 break;
 
             case "DELETE":
-
                 break;
 
             case "POST":
@@ -424,7 +409,7 @@ void CritForInc(IApplicationBuilder appBuilder)
 
 void Patients(IApplicationBuilder appBuilder)
 {
-    appBuilder.Run(async (context) =>
+    appBuilder.Run(async context =>
     {
         var response = context.Response;
         var request = context.Request;
@@ -474,7 +459,7 @@ void Patients(IApplicationBuilder appBuilder)
 
 void Kdh(IApplicationBuilder appBuilder)
 {
-    appBuilder.Run(async (context) =>
+    appBuilder.Run(async context =>
     {
         var response = context.Response;
         var request = context.Request;
@@ -784,11 +769,11 @@ async Task GetCriteriaForException(HttpResponse response, NpgsqlConnection conne
 {
     try
     {
-        var qurySelect = "select * from \"criteriaForException\" where \"VisitId\" = @VisitId;";
+        var querySelect = "select * from \"criteriaForException\" where \"VisitId\" = @VisitId;";
         var param = new DynamicParameters();
         param.Add("@VisitId", visitId);
 
-        var criteriaForException = connection.Query<CriteriaForException>(qurySelect, param);
+        var criteriaForException = connection.Query<CriteriaForException>(querySelect, param);
 
         if (criteriaForException.Any())
         {
@@ -799,7 +784,7 @@ async Task GetCriteriaForException(HttpResponse response, NpgsqlConnection conne
             var queryInsert = "insert into \"criteriaForException\" (\"VisitId\") values (@VisitId);";
             connection.Query(queryInsert, param);
 
-            criteriaForException = connection.Query<CriteriaForException>(qurySelect, param);
+            criteriaForException = connection.Query<CriteriaForException>(querySelect, param);
             await response.WriteAsJsonAsync(criteriaForException);
         }
     }
@@ -861,11 +846,11 @@ async Task GetCriteriaForInclusion(HttpResponse response, NpgsqlConnection conne
 {
     try
     {
-        var qurySelect = "select * from \"criteriaForInclusion\" where \"VisitId\" = @VisitId;";
+        var querySelect = "select * from \"criteriaForInclusion\" where \"VisitId\" = @VisitId;";
         var param = new DynamicParameters();
         param.Add("@VisitId", visitId);
 
-        var criteriaForInclusion = connection.Query<CriteriaForInclusion>(qurySelect, param);
+        var criteriaForInclusion = connection.Query<CriteriaForInclusion>(querySelect, param);
 
         if (criteriaForInclusion.Any())
         {
@@ -876,7 +861,7 @@ async Task GetCriteriaForInclusion(HttpResponse response, NpgsqlConnection conne
             var queryInsert = "insert into \"criteriaForInclusion\" (\"VisitId\") values (@VisitId);";
             connection.Query(queryInsert, param);
 
-            criteriaForInclusion = connection.Query<CriteriaForInclusion>(qurySelect, param);
+            criteriaForInclusion = connection.Query<CriteriaForInclusion>(querySelect, param);
             await response.WriteAsJsonAsync(criteriaForInclusion);
         }
     }
@@ -885,8 +870,7 @@ async Task GetCriteriaForInclusion(HttpResponse response, NpgsqlConnection conne
         response.StatusCode = 400;
         await response.WriteAsJsonAsync(new
         {
-            message = "Ошибка опять снова какая-то. Надеюсь искренне, что это сообщение" +
-                      "никогда не отправится"
+            message = "Произошла ошибка"
         });
     }
 }
